@@ -1,0 +1,4 @@
+package IDE
+
+class ExploradorDeArquivos {
+}
