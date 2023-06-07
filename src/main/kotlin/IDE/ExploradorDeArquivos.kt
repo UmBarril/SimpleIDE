@@ -50,7 +50,7 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
      */
     private fun bfsArvore(raiz: File): DefaultMutableTreeNode {
         if (!raiz.isDirectory) return DefaultMutableTreeNode(raiz.name)
-        val visitado = DefaultMutableTreeNode(raiz.name)
+        val visitado = DefaultMutableTreeNode(raiz.name, true)
         val visitar: Deque<File> = LinkedList()
         visitar.add(raiz)
 
@@ -65,6 +65,10 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
         }
 
         return visitado
+    }
+
+    private fun carregarArquivosDaPasta(pasta: File): DefaultMutableTreeNode {
+        pasta.for
     }
 }
 
