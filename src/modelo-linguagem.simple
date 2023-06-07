@@ -1,0 +1,15 @@
+
+// main = { }
+main: () -> void = {
+    inteiro: i64 = 1
+    float: f32 = 1.0
+    texto: str = "coisa"
+    print("")
+    input()
+
+    if 10 > 10 {
+        // foo
+    } else {
+        // bar
+    }
+}

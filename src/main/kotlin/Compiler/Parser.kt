@@ -1,2 +1,4 @@
+package Compiler
+
 class Parser {
 }
