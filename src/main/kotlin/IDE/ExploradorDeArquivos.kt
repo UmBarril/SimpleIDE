@@ -1,6 +1,7 @@
 package IDE
 
 import java.awt.Dimension
+import java.awt.PopupMenu
 import java.awt.event.MouseEvent
 import java.awt.event.MouseListener
 import java.io.File
@@ -33,34 +34,33 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
 
                     }
                 }
-
             }
         }
-        arvore.addHierarchyListener {
+
+        arvore.addHierarchyListener {}
         arvore = JTree(carregarRaiz(File(caminhoInicial)))
 
+        // Código para adicionar a funcionalidade de menu de contexto no explorador.
+        val popupMenu = PopupMenu() // adicionar coisas a isso
         addMouseListener(object : MouseListener {
             override fun mouseClicked(e: MouseEvent?) {
+                e ?: throw NullPointerException()
+
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    val row = tree.getClosestRowForLocation (e.getX(), e.getY());
-                    tree.setSelectionRow(row);
+                    val row = arvore.getClosestRowForLocation (e.x, e.y);
+                    arvore.setSelectionRow(row);
                     popupMenu.show(e.getComponent(), e.getX(), e.getY());
                 }
-                TODO("Not yet implemented")
             }
-
             override fun mousePressed(e: MouseEvent?) {
                 TODO("Not yet implemented")
             }
-
             override fun mouseReleased(e: MouseEvent?) {
                 TODO("Not yet implemented")
             }
-
             override fun mouseEntered(e: MouseEvent?) {
                 TODO("Not yet implemented")
             }
-
             override fun mouseExited(e: MouseEvent?) {
                 TODO("Not yet implemented")
             }
