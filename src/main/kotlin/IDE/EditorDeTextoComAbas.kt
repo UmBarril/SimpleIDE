@@ -21,8 +21,16 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
         preferredSize = dimensao
         layout = GridLayout(1,1)
 
-        // TODO: Talvez colocar um botão para criar o arquivo diretamente por aqui?
-        tabbedPane.addTab("Início", JLabel("Nenhum arquivo aberto!\n Vá em Arquivo > Abrir para começar!"))
+        val painelInicial = JPanel()
+        painelInicial.add(JLabel("Nenhum arquivo aberto!\n Vá em Arquivo > Abrir para começar, ou clique no botão a seguir!"))
+        val botao = JButton("Criar um novo arquivo.")
+        botao.addActionListener {
+            criarArquivoVazio(JOptionPane.showInputDialog("Digite o nome do novo arquivo: "))
+            tabbedPane.remove(painelInicial)
+        }
+        painelInicial.add(botao)
+
+        tabbedPane.addTab("Início", painelInicial)
         add(tabbedPane)
     }
 

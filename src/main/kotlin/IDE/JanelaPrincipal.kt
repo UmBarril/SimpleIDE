@@ -1,16 +1,15 @@
 package IDE
 
 import java.awt.*
+import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
 import java.io.File
-import java.io.FileReader
 import javax.swing.*
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 
 class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo) {
-    //private var pastaAberta = System.getProperty("user.home")
-    private var pastaAberta = "C:/Users/Joao/Desktop"
+    private var pastaAberta = System.getProperty("user.home")
 
     private val explorador: ExploradorDeArquivos
     private val editor: EditorDeTextoComAbas // painel que fica a direita ou no meio
@@ -43,52 +42,26 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
 
     private fun criarMenuBar(): JMenuBar {
         val menuBar = JMenuBar()
-        val fileChooser = JFileChooser(pastaAberta)
         menuBar.adicionarVarios(
             JMenu("Arquivo").apply {
                 mnemonic = KeyEvent.VK_A
                 adicionarVarios(
                     JMenuItem("Abrir").apply { // TODO: mostrar arquivos que foram abertos recentemente
-                        addActionListener {
-                            val resultado = fileChooser.showOpenDialog(this@JanelaPrincipal)
-                            val f = File(fileChooser.selectedFile.absolutePath);
-                            if(resultado == JFileChooser.APPROVE_OPTION) {
-                               editor.abrirAquivo(f)
-                            }
-                        }
+                        addActionListener(::clicouBotaoAbrir)
                     },
                     JMenuItem("Salvar").apply {
-                        addActionListener {
-                            val resultado = fileChooser.showOpenDialog(this@JanelaPrincipal)
-                            val f = File(fileChooser.selectedFile.absolutePath);
-                            if(resultado == JFileChooser.APPROVE_OPTION) {
-                                val caminho = editor.arquivoAberto
-                                if(caminho != null) {
-                                    editor.salvarArquivo(caminho)
-                                } else {
-                                    TODO("chamar o Salvar Como")
-                                }
-                            }
-                        }
+                        addActionListener(::clicouBotaoSalvar)
                     },
                     JMenuItem("Salvar Como").apply {
-                        addActionListener {
-                            val resultado = fileChooser.showOpenDialog(this@JanelaPrincipal)
-                            if(resultado == JFileChooser.APPROVE_OPTION) {
-                                val f = File(fileChooser.selectedFile.absolutePath)
-                                val caminho = editor.arquivoAberto
-                                if(caminho != null) {
-                                    editor.salvarArquivo(caminho)
-                                } else {
-                                    TODO("Fazer erro")
-                                }
-                            }
-                        }
+                        addActionListener(::clicouBotaoSalvarComo)
                     },
                     JMenuItem("Sair").apply {
-                        size = Dimension(50,50)
-                        toolTipText = "Sai da IDE"
-                        addActionListener { exitProcess(0) }
+                        toolTipText = "Sair da IDE"
+                        addActionListener {
+                            // TODO: if(codigo nao salvo) { perguntar se tem que salvar }
+                            // JOptionPane.showConfirmDialog(this@JanelaPrincipal, "")
+                            exitProcess(0)
+                        }
                     }
                 )
             },
@@ -96,30 +69,18 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
                 mnemonic = KeyEvent.VK_J
                 adicionarVarios(
                     JMenu("Mudar Tema").apply {
-                        val optEscuro = JRadioButtonMenuItem("Tema Escuro").apply {
-                                addActionListener {
-                                    this@JanelaPrincipal.contentPane.background = Color(175, 175, 190)
-                                    this@JanelaPrincipal.contentPane.background = Color(75, 75, 85)
-                                }
-                            }
-                        val optClaro = JRadioButtonMenuItem("Tema Claro").apply {
-                                addActionListener {
-//                                    optEscuro.add(JRadioButtonMenuItem("aaaa"))
-                                    this@JanelaPrincipal.contentPane.background = Color(75, 75, 85)
-                                    this@JanelaPrincipal.contentPane.background = Color(75, 75, 85)
-                                }
-                            }
-                        adicionarVarios(optEscuro,optClaro)
+                        adicionarVarios(
+                            JRadioButtonMenuItem("Tema Escuro").apply { addActionListener { mudarTema(TemaIDE.ESCURO)} },
+                            JRadioButtonMenuItem("Tema Claro").apply { addActionListener { mudarTema(TemaIDE.CLARO)} }
+                        )
                     }
                 )
             },
             JMenu("Configurações").apply {
-                adicionarVarios(
-                    JMenuItem("Config. Editor").apply {
-                        size = Dimension(50,50)
-                        addActionListener {
-                            abrirConfiguracoes()
-                        }
+                mnemonic = KeyEvent.VK_C
+                add(
+                    JMenuItem("Abrir").apply {
+                        addActionListener(::clicouBotaoAbrirConfiguracoes)
                     }
                 )
             }
@@ -127,22 +88,49 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
         return menuBar
     }
 
-        fun abrirArquivo(arquivo: File) {
-            val janelaDoArquivo = JScrollPane().apply {
-                preferredSize = Dimension(200, 200)
-            }
-            var conteudoDoArquivo = ""
-            FileReader(arquivo).use { fileReader ->
-                fileReader.readLines().forEach { line ->
-                    conteudoDoArquivo += "$line\n"
-                }
-            }
-            janelaDoArquivo.add(TextField(conteudoDoArquivo))
+    private fun clicouBotaoAbrir(e: ActionEvent) {
+        val fileChooser = JFileChooser(pastaAberta)
+
+        val resultado = fileChooser.showOpenDialog(this@JanelaPrincipal)
+        val f = File(fileChooser.selectedFile.absolutePath)
+        if (resultado == JFileChooser.APPROVE_OPTION) {
+            editor.abrirAquivo(f)
         }
+    }
 
+    private fun clicouBotaoSalvar(e: ActionEvent) {
+        val caminho = editor.arquivoAberto
+        if (caminho != null) {
+            editor.salvarArquivo(caminho)
+        } else {
+            clicouBotaoSalvarComo(null)
+        }
+    }
 
-    private fun abrirConfiguracoes() {
-        var janelaConfiguracoes = JDialog(this, "Configurações")
+    private fun clicouBotaoSalvarComo(e: ActionEvent?) {
+        val fileChooser = JFileChooser(pastaAberta)
+
+        val resultado = fileChooser.showOpenDialog(this@JanelaPrincipal)
+        if(resultado == JFileChooser.APPROVE_OPTION) {
+            editor.salvarArquivo(File(fileChooser.selectedFile.absolutePath))
+        }
+    }
+
+    private fun mudarTema(tema: TemaIDE) {
+        when(tema) {
+            TemaIDE.CLARO -> {
+                this@JanelaPrincipal.contentPane.background = Color(175, 175, 190)
+                this@JanelaPrincipal.contentPane.background = Color(75, 75, 85)
+            }
+            TemaIDE.ESCURO -> {
+                this@JanelaPrincipal.contentPane.background = Color(75, 75, 85)
+                this@JanelaPrincipal.contentPane.background = Color(75, 75, 85)
+            }
+        }
+    }
+
+    private fun clicouBotaoAbrirConfiguracoes(e: ActionEvent) {
+        val janelaConfiguracoes = JDialog(this, "Configurações")
         janelaConfiguracoes.layout = GridLayout(3,1)
 
         janelaConfiguracoes.size = Dimension(this.width / 4, this.height / 4)
@@ -190,4 +178,8 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
             this.add(comp)
         }
     }
+}
+
+enum class TemaIDE {
+    CLARO, ESCURO
 }
