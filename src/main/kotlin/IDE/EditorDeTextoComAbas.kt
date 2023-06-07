@@ -26,7 +26,7 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
         add(tabbedPane)
     }
 
-    fun criarArquivo(nome: String) {
+    fun criarArquivoVazio(nome: String) {
         tabbedPane.addTab(nome, EditorDeTexto(""))
     }
 

@@ -66,7 +66,7 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
                                 if(caminho != null) {
                                     editor.salvarArquivo(caminho)
                                 } else {
-                                    // TODO: chamar o Salvar Como
+                                    TODO("chamar o Salvar Como")
                                 }
                             }
                         }
@@ -80,7 +80,7 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
                                 if(caminho != null) {
                                     editor.salvarArquivo(caminho)
                                 } else {
-                                    // TODO: Fazer erro
+                                    TODO("Fazer erro")
                                 }
                             }
                         }

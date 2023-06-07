@@ -1,12 +1,13 @@
 package IDE
 
 import java.awt.Dimension
+import java.awt.event.MouseEvent
+import java.awt.event.MouseListener
 import java.io.File
-import java.util.Deque
-import java.util.LinkedList
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.JTree
+import javax.swing.SwingUtilities
 import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
 
@@ -20,15 +21,50 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
         this.minimumSize = dimensao
         this.isOpaque = true
         this.isVisible = true
-        raiz = bfsArvore(File(caminhoInicial))
+        raiz = carregarRaiz(File(caminhoInicial))
 
         arvore = JTree(raiz).apply {
             preferredSize = dimensao
             isVisible = true
+            addTreeSelectionListener { clickedComponent ->
+                val arquivo = File(clickedComponent.path.toString())
+                if (arquivo.isDirectory) {
+                    arquivosDaPasta(arquivo).forEach {
+
+                    }
+                }
+
+            }
         }
         arvore.addHierarchyListener {
-            arvore = JTree(bfsArvore(File(caminhoInicial)))
-        }
+        arvore = JTree(carregarRaiz(File(caminhoInicial)))
+
+        addMouseListener(object : MouseListener {
+            override fun mouseClicked(e: MouseEvent?) {
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    val row = tree.getClosestRowForLocation (e.getX(), e.getY());
+                    tree.setSelectionRow(row);
+                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
+                }
+                TODO("Not yet implemented")
+            }
+
+            override fun mousePressed(e: MouseEvent?) {
+                TODO("Not yet implemented")
+            }
+
+            override fun mouseReleased(e: MouseEvent?) {
+                TODO("Not yet implemented")
+            }
+
+            override fun mouseEntered(e: MouseEvent?) {
+                TODO("Not yet implemented")
+            }
+
+            override fun mouseExited(e: MouseEvent?) {
+                TODO("Not yet implemented")
+            }
+        })
         val scrollPane = JScrollPane().apply {
             size = dimensao
             add(arvore)
@@ -48,27 +84,25 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
      * @return o DefaultMutableTreeNode contendo a hierarquia de pastas e arquivos.
      * @author Slz
      */
-    private fun bfsArvore(raiz: File): DefaultMutableTreeNode {
+    private fun carregarRaiz(raiz: File): DefaultMutableTreeNode {
         if (!raiz.isDirectory) return DefaultMutableTreeNode(raiz.name)
-        val visitado = DefaultMutableTreeNode(raiz.name, true)
-        val visitar: Deque<File> = LinkedList()
-        visitar.add(raiz)
-
-        while(visitar.isNotEmpty()) {
-            val arquivoAtual = visitar.removeFirst()
-            val node = DefaultMutableTreeNode(arquivoAtual.name)
-            arquivoAtual.listFiles()?.forEach {
-                node.add(DefaultMutableTreeNode(it.name))
-                visitar += it
+        val raizNode = DefaultMutableTreeNode(raiz.name, true).apply {
+            raiz.listFiles()?.forEach { file ->
+                if (file.isDirectory) add(DefaultMutableTreeNode(file.name, true))
+                else add(DefaultMutableTreeNode(file.name, false))
             }
-            visitado.add(node)
         }
 
-        return visitado
+        return raizNode
     }
 
-    private fun carregarArquivosDaPasta(pasta: File): DefaultMutableTreeNode {
-        pasta.for
+    private fun arquivosDaPasta(pasta: File): List<DefaultMutableTreeNode> {
+        val listaDeArquivos = mutableListOf<DefaultMutableTreeNode>()
+        pasta.listFiles()?.forEach { file ->
+            if (file.isDirectory) listaDeArquivos.add(DefaultMutableTreeNode(file.name, true))
+            else listaDeArquivos.add(DefaultMutableTreeNode(file.name, false))
+        }
+        return listaDeArquivos
     }
 }
 
