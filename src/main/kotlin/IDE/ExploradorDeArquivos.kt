@@ -25,6 +25,16 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
         raiz = arquivosDaRaiz(File(caminhoInicial))
 
         arvore = JTree(raiz).apply {
+            addTreeSelectionListener { selectEvent ->
+                val source = selectEvent.source as? DefaultMutableTreeNode // pega o source do evento como um Default mutable tree(pode ser null)
+                File(selectEvent.path.toString()). // Seleciona o arquivo que o usuário clicou
+
+                    carregarArquivosDaPasta()?. // pega todos os arquivos do arquivo que o usuário
+                                                // selecionou(caso o arquivo for uma pasta) em formato de DefaultMutableTreeNode
+                                                // no caso, o arquivo que o usuário selecionou é o arquivo da linha 30
+
+                    let{source?.add(it)} // caso o source do evento não for null, adicione o DefaultMutableTreeNode nele
+            }
             cellRenderer = RenderizadorDeNodes()
             preferredSize = dimensao
             isVisible = true
@@ -65,7 +75,6 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
 //            }
 //        })
 
-
     }
 
     fun addTreeSelectionListener(listener: TreeSelectionListener) {
@@ -77,9 +86,24 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
         if (!raiz.isDirectory) return raizNode
 
         raiz.listFiles()?.forEach { arquivo ->
-            if (arquivo.isFile) raizNode.add(DefaultMutableTreeNode(arquivo.name))
+            if (arquivo.isDirectory) raizNode.add(DefaultMutableTreeNode(arquivo.name, true))
+            else raizNode.add(DefaultMutableTreeNode(arquivo.name, false))
         }
-        return DefaultMutableTreeNode()
+        return raizNode
+    }
+
+    private fun File.carregarArquivosDaPasta(): DefaultMutableTreeNode? {
+        if (!this.isDirectory) return null
+
+        return (
+            DefaultMutableTreeNode().apply {
+                this@carregarArquivosDaPasta.listFiles()?.forEach { arquivo -> // para cada arquivo da pasta
+                    if (arquivo.isDirectory) this.add(DefaultMutableTreeNode(arquivo.name, true)) // caso for pasta, adicione o node dessa forma
+                    else this.add(DefaultMutableTreeNode(arquivo.name, false)) // caso contrario, adicione o node dessa forma.
+                }
+            }
+        )
+
     }
 
     class RenderizadorDeNodes: DefaultTreeCellRenderer() {
