@@ -3,7 +3,6 @@ package IDE
 import java.awt.*
 import java.io.File
 import javax.swing.*
-import javax.swing.border.EmptyBorder
 import javax.swing.text.DefaultEditorKit
 import javax.swing.text.StyleConstants
 
@@ -66,9 +65,8 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
     /**
      * Classe para editar/visualizar o conteúdo de um arquivo.
      * @param conteudo
-     * @param apenasLeitura caso true, o conteudo não podera ser editado. Padrão = false
      */
-    class EditorDeTexto(var conteudo: String = "", val caminhoOriginal: String? = null, val apenasLeitura: Boolean = false) : JPanel() {
+    class EditorDeTexto(var conteudo: String = "", val caminhoOriginal: String? = null) : JPanel() {
         init {
             layout = GridLayout(1,1)
 
