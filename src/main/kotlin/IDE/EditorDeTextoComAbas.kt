@@ -49,8 +49,9 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
     fun abrirAquivo(arquivo: File) {
         if (arquivo.isFile) {
             // TODO: Melhorar otimização desta parte do código
-            val linhas = arquivo.readLines().toString() // procurar uma função de ler linhas mais optimizada
-            tabbedPane.add(arquivo.name, EditorDeTexto(linhas))
+            val linhas = arquivo.readLines() // procurar uma função de ler linhas mais optimizada
+
+            tabbedPane.add(arquivo.name, EditorDeTexto(linhas.joinToString("\n")))
             tabbedPane.selectedIndex = tabbedPane.tabCount - 1
         }
     }
