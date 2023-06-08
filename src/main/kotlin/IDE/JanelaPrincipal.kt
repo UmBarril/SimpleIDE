@@ -37,7 +37,16 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
 
         explorador.addTreeSelectionListener { editor.abrirAquivo(it.path.toString()) }
 
-        add(JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.explorador, this.editor))
+        add(
+            JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.explorador, this.editor).apply {
+                addPropertyChangeListener {
+                    if (it.propertyName == "dividerLocation" || it.propertyName == "lastDividerLocation") {
+                        println("valor: ${it.oldValue}")
+                        explorador.atualizarDimensao(it.oldValue as Int)
+                    }
+                }
+            }
+        )
         pack()
     }
 

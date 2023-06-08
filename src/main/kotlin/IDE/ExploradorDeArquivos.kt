@@ -15,6 +15,7 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
 
     private var arvore: JTree
     private val raiz: DefaultMutableTreeNode
+    private val scrollPane: JScrollPane
 
     init {
         this.preferredSize = dimensao
@@ -41,7 +42,7 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
             isOpaque = true
         }
 
-        val scrollPane = JScrollPane(arvore).apply {
+        scrollPane = JScrollPane(arvore).apply {
             preferredSize = dimensao
             isVisible = true
             isOpaque = true
@@ -92,6 +93,13 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
         return raizNode
     }
 
+    fun atualizarDimensao(largura: Int) {
+        scrollPane.preferredSize = Dimension(largura-25, this.height)
+        arvore.preferredSize = scrollPane.size
+        println("largura do scrollPane: ${scrollPane.size.width}")
+
+    }
+
     private fun File.carregarArquivosDaPasta(): DefaultMutableTreeNode? {
         if (!this.isDirectory) return null
 
@@ -119,9 +127,9 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
         ): Component {
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus)
 
-            if (value is DefaultMutableTreeNode && value.allowsChildren) {
-                icon = UIManager.getIcon("FileView.directoryIcon")
-            }
+            icon = if (value is DefaultMutableTreeNode && value.allowsChildren)
+                UIManager.getIcon("FileView.directoryIcon")
+            else UIManager.getIcon("FileView.fileIcon")
             return this
         }
     }
