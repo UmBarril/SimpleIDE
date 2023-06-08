@@ -94,10 +94,8 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
     }
 
     fun atualizarDimensao(largura: Int) {
-        scrollPane.preferredSize = Dimension(largura-25, this.height)
+        scrollPane.preferredSize = Dimension(largura, this.height)
         arvore.preferredSize = scrollPane.size
-        println("largura do scrollPane: ${scrollPane.size.width}")
-
     }
 
     private fun File.carregarArquivosDaPasta(): DefaultMutableTreeNode? {
