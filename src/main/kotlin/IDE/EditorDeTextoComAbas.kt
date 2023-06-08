@@ -1,11 +1,10 @@
 package IDE
 
-import java.awt.Color
-import java.awt.Dimension
-import java.awt.Font
-import java.awt.GridLayout
+import java.awt.*
 import java.io.File
 import javax.swing.*
+import javax.swing.border.EmptyBorder
+import javax.swing.text.DefaultEditorKit
 import javax.swing.text.StyleConstants
 
 /**
@@ -49,9 +48,9 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
     fun abrirAquivo(arquivo: File) {
         if (arquivo.isFile) {
             // TODO: Melhorar otimização desta parte do código
-            val linhas = arquivo.readLines() // procurar uma função de ler linhas mais optimizada
+            val linhas = arquivo.readLines() // procurar uma função de ler linhas mais otimizada
 
-            tabbedPane.add(arquivo.name, EditorDeTexto(linhas.joinToString("\n")))
+            tabbedPane.add(arquivo.name, EditorDeTexto(linhas.joinToString("\n"), arquivo.absolutePath))
             tabbedPane.selectedIndex = tabbedPane.tabCount - 1
         }
     }
@@ -61,14 +60,13 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
     }
 
     fun salvarArquivo(arquivo: File) {
-        throw Exception("não implementado")
-        // TODO
+        arquivo.writeText((tabbedPane.selectedComponent as EditorDeTexto).conteudo)
     }
 
     /**
      * Classe para editar/visualizar o conteúdo de um arquivo.
      * @param conteudo
-     * @param apenasLeitura caso true, o conteúdo não poderá ser editado. Padrão = false
+     * @param apenasLeitura caso true, o conteudo não podera ser editado. Padrão = false
      */
     class EditorDeTexto(var conteudo: String = "", val caminhoOriginal: String? = null, val apenasLeitura: Boolean = false) : JPanel() {
         init {
@@ -77,6 +75,7 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             val textPane = JTextPane()
             val scrollPane = JScrollPane()
 
+            textPane.actionMap.get(DefaultEditorKit.beepAction).isEnabled = false // desabilitar sons de beep
             textPane.font = Font("Arial", Font.PLAIN, 20)
             textPane.background = Color(45, 45, 55)
             textPane.foreground = Color.WHITE
@@ -85,12 +84,19 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             val doc = textPane.styledDocument
             val style = textPane.addStyle("", null) //?????
             StyleConstants.setForeground(style, Color.WHITE)
+            StyleConstants.setBackground(style, Color.LIGHT_GRAY)
 
             doc.insertString(doc.length, conteudo, style)
 
             scrollPane.add(textPane)
             add(textPane)
             // scrollPane.rowHeader
+        }
+
+        override fun paintComponent(g: Graphics?) {
+            super.paintComponent(g)
+
+            // TODO: Adicionar botão de fechar aba
         }
 
         // TODO: Funcionalidade de detectar linguagem e adicionar highlights
