@@ -3,7 +3,10 @@ package IDE
 import java.awt.*
 import java.awt.event.ActionEvent
 import java.awt.event.KeyEvent
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
 import java.io.File
+import javax.imageio.ImageIO
 import javax.swing.*
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
@@ -20,7 +23,9 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
         layout = GridLayout()
 
         size = Dimension(largura, altura)
-        defaultCloseOperation = EXIT_ON_CLOSE
+        addWindowListener(object : WindowAdapter() {
+            override fun windowClosing(e: WindowEvent?) = fecharProgramaSeConfirmar()
+        })
         contentPane.background = Color(75, 75, 85)
         iconImage = ImageIcon("").image // TODO
         jMenuBar = criarMenuBar()
@@ -46,22 +51,23 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
             JMenu("Arquivo").apply {
                 mnemonic = KeyEvent.VK_A
                 adicionarVarios(
-                    JMenuItem("Abrir").apply { // TODO: mostrar arquivos que foram abertos recentemente
+                    JMenuItem("Abrir...").apply { // TODO: mostrar arquivos que foram abertos recentemente
+                        toolTipText = "Abrir arquivo no sistema"
+                        icon = ImageIcon("assets/fugue-icons-3.5.6/icons/folder-stand.png")
                         addActionListener(::clicouBotaoAbrir)
                     },
                     JMenuItem("Salvar").apply {
+                        icon = ImageIcon("assets/fugue-icons-3.5.6/icons/disk.png")
                         addActionListener(::clicouBotaoSalvar)
                     },
-                    JMenuItem("Salvar Como").apply {
+                    JMenuItem("Salvar Como...").apply {
+                        icon = ImageIcon("assets/fugue-icons-3.5.6/icons/disks.png")
                         addActionListener(::clicouBotaoSalvarComo)
                     },
                     JMenuItem("Sair").apply {
+                        icon = ImageIcon("assets/fugue-icons-3.5.6/icons/door-open-out.png")
                         toolTipText = "Sair da IDE"
-                        addActionListener {
-                            // TODO: if(codigo nao salvo) { perguntar se tem que salvar }
-                            // JOptionPane.showConfirmDialog(this@JanelaPrincipal, "")
-                            exitProcess(0)
-                        }
+                        addActionListener { fecharProgramaSeConfirmar() }
                     }
                 )
             },
@@ -70,8 +76,14 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
                 adicionarVarios(
                     JMenu("Mudar Tema").apply {
                         adicionarVarios(
-                            JRadioButtonMenuItem("Tema Escuro").apply { addActionListener { mudarTema(TemaIDE.ESCURO)} },
-                            JRadioButtonMenuItem("Tema Claro").apply { addActionListener { mudarTema(TemaIDE.CLARO)} }
+                            JRadioButtonMenuItem("Tema Escuro").apply {
+                                icon = ImageIcon("resources/fugue-icons-3.5.6/icons/flag-black.png")
+                                addActionListener { mudarTema(TemaIDE.ESCURO) }
+                            },
+                            JRadioButtonMenuItem("Tema Claro").apply {
+                                icon = ImageIcon(ImageIO.read(javaClass.classLoader.getResourceAsStream("resources/fugue-icons-3.5.6/icons/flag-white.png")))
+                                addActionListener { mudarTema(TemaIDE.CLARO)}
+                            }
                         )
                     }
                 )
@@ -80,12 +92,20 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
                 mnemonic = KeyEvent.VK_C
                 add(
                     JMenuItem("Abrir").apply {
+                        icon = ImageIcon("assets/fugue-icons-3.5.6/icons/gear.png")
                         addActionListener(::clicouBotaoAbrirConfiguracoes)
                     }
                 )
             }
         )
         return menuBar
+    }
+
+    fun fecharProgramaSeConfirmar() {
+        val resultado = JOptionPane.showConfirmDialog(this, "Você realmente deseja sair? Mudanças não salvas serão perdidas.", "Sair", JOptionPane.YES_NO_OPTION)
+        if(resultado == JOptionPane.YES_NO_OPTION) {
+            exitProcess(0)
+        }
     }
 
     private fun clicouBotaoAbrir(e: ActionEvent) {
