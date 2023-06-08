@@ -1,28 +1,26 @@
 package IDE
 
 import java.awt.*
-import java.awt.event.ActionEvent
-import java.awt.event.KeyEvent
-import java.awt.event.WindowAdapter
-import java.awt.event.WindowEvent
+import java.awt.event.*
 import java.io.File
-import javax.imageio.ImageIO
 import javax.swing.*
 import kotlin.math.roundToInt
 import kotlin.system.exitProcess
 
-class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo) {
+class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
     private var pastaAberta = System.getProperty("user.home")
 
     private val explorador: ExploradorDeArquivos
     private val editor: EditorDeTextoComAbas // painel que fica a direita ou no meio
 
-    private val config: ConfigManager
+    private val config: ConfigManager = ConfigManager()
 
     init {
+        config.carregar()
+
         layout = GridLayout()
 
-        size = Dimension(largura, altura)
+        size = tamanho
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent?) = fecharProgramaSeConfirmar()
         })
@@ -30,8 +28,6 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
         iconImage = ImageIcon("").image // TODO
         jMenuBar = criarMenuBar()
 
-        config = ConfigManager()
-        config.carregar()
 
         val tamanhoExplorador = Dimension((size.width * 0.2).roundToInt(), size.height - jMenuBar.height)
         val tamanhoEditor = Dimension((size.width * 0.8).roundToInt(), size.height - jMenuBar.height)
@@ -51,21 +47,47 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
             JMenu("Arquivo").apply {
                 mnemonic = KeyEvent.VK_A
                 adicionarVarios(
-                    JMenuItem("Abrir...").apply { // TODO: mostrar arquivos que foram abertos recentemente
+                    JMenuItem("Abrir...").apply {
                         toolTipText = "Abrir arquivo no sistema"
-                        icon = ImageIcon("assets/fugue-icons-3.5.6/icons/folder-stand.png")
+                        icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/folder-stand.png"))
                         addActionListener(::clicouBotaoAbrir)
                     },
+                    JMenu("Abrir Recentes").also {
+                        addMouseListener(object : MouseListener {
+                            override fun mouseEntered(e: MouseEvent?) {
+                                it.removeAll()
+                                val arquivosRecentes = config["arquivosRecentes"].split(";")
+                                if(arquivosRecentes.isEmpty()) {
+                                    it.add(JMenuItem("Nunhum arquivo aberto ainda."))
+                                    return
+                                }
+                                for(i in arquivosRecentes.indices) {
+                                    it.add(JMenuItem("${i+1}: ${arquivosRecentes[i]}").apply {
+                                        addActionListener {
+                                            editor.abrirAquivo(arquivosRecentes[i])
+                                        }
+                                    })
+                                }
+                            }
+                            override fun mouseClicked(e: MouseEvent?) {}
+                            override fun mousePressed(e: MouseEvent?) {}
+                            override fun mouseReleased(e: MouseEvent?) {}
+                            override fun mouseExited(e: MouseEvent?) {}
+                        })
+                    },
                     JMenuItem("Salvar").apply {
-                        icon = ImageIcon("assets/fugue-icons-3.5.6/icons/disk.png")
+                        icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/disk.png"))
                         addActionListener(::clicouBotaoSalvar)
                     },
                     JMenuItem("Salvar Como...").apply {
-                        icon = ImageIcon("assets/fugue-icons-3.5.6/icons/disks.png")
+                        icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/disks.png"))
                         addActionListener(::clicouBotaoSalvarComo)
-                    },
+                    }
+                )
+                addSeparator()
+                add(
                     JMenuItem("Sair").apply {
-                        icon = ImageIcon("assets/fugue-icons-3.5.6/icons/door-open-out.png")
+                        icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/door-open-out.png"))
                         toolTipText = "Sair da IDE"
                         addActionListener { fecharProgramaSeConfirmar() }
                     }
@@ -77,11 +99,11 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
                     JMenu("Mudar Tema").apply {
                         adicionarVarios(
                             JRadioButtonMenuItem("Tema Escuro").apply {
-                                icon = ImageIcon("resources/fugue-icons-3.5.6/icons/flag-black.png")
+                                icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/flag-black.png"))
                                 addActionListener { mudarTema(TemaIDE.ESCURO) }
                             },
                             JRadioButtonMenuItem("Tema Claro").apply {
-                                icon = ImageIcon(ImageIO.read(javaClass.classLoader.getResourceAsStream("resources/fugue-icons-3.5.6/icons/flag-white.png")))
+                                icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/flag-white.png"))
                                 addActionListener { mudarTema(TemaIDE.CLARO)}
                             }
                         )
@@ -92,7 +114,7 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
                 mnemonic = KeyEvent.VK_C
                 add(
                     JMenuItem("Abrir").apply {
-                        icon = ImageIcon("assets/fugue-icons-3.5.6/icons/gear.png")
+                        icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/gear.png"))
                         addActionListener(::clicouBotaoAbrirConfiguracoes)
                     }
                 )
@@ -111,10 +133,16 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
     private fun clicouBotaoAbrir(e: ActionEvent) {
         val fileChooser = JFileChooser(pastaAberta)
 
-        val resultado = fileChooser.showOpenDialog(this@JanelaPrincipal)
+        val resultado = fileChooser.showOpenDialog(this)
         val f = File(fileChooser.selectedFile.absolutePath)
         if (resultado == JFileChooser.APPROVE_OPTION) {
             editor.abrirAquivo(f)
+            if(config["arquivosRecentes"].isEmpty()) {
+                config["arquivosRecentes"] = f.path
+            } else {
+                val cincoMaisRecentes: List<String> = config["arquivosRecentes"].split(';', limit=5)
+                config["arquivosRecentes"] = f.path + ";" + cincoMaisRecentes.joinToString()
+            }
         }
     }
 
@@ -130,7 +158,7 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
     private fun clicouBotaoSalvarComo(e: ActionEvent?) {
         val fileChooser = JFileChooser(pastaAberta)
 
-        val resultado = fileChooser.showOpenDialog(this@JanelaPrincipal)
+        val resultado = fileChooser.showOpenDialog(this)
         if(resultado == JFileChooser.APPROVE_OPTION) {
             editor.salvarArquivo(File(fileChooser.selectedFile.absolutePath))
         }
@@ -139,18 +167,19 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
     private fun mudarTema(tema: TemaIDE) {
         when(tema) {
             TemaIDE.CLARO -> {
-                this@JanelaPrincipal.contentPane.background = Color(175, 175, 190)
-                this@JanelaPrincipal.contentPane.background = Color(75, 75, 85)
+                this.contentPane.background = Color(175, 175, 190)
+                this.contentPane.background = Color(75, 75, 85)
             }
             TemaIDE.ESCURO -> {
-                this@JanelaPrincipal.contentPane.background = Color(75, 75, 85)
-                this@JanelaPrincipal.contentPane.background = Color(75, 75, 85)
+                this.contentPane.background = Color(75, 75, 85)
+                this.contentPane.background = Color(75, 75, 85)
             }
         }
     }
 
     private fun clicouBotaoAbrirConfiguracoes(e: ActionEvent) {
         val janelaConfiguracoes = JDialog(this, "Configurações")
+        janelaConfiguracoes.setIconImage(ImageIcon(getResource("fugue-icons-3.5.6/icons/gear.png")).image)
         janelaConfiguracoes.layout = GridLayout(3,1)
 
         janelaConfiguracoes.size = Dimension(this.width / 4, this.height / 4)
@@ -191,6 +220,9 @@ class JanelaPrincipal(titulo: String, largura: Int, altura: Int) : JFrame(titulo
 
         janelaConfiguracoes.isVisible = true
     }
+
+    // Função para ajudar o acesso de recursos
+    private fun getResource(resource: String) = javaClass.classLoader.getResource(resource)
 
     // Facilitador para não ter que fazer vários adds em sequência
     private fun JComponent.adicionarVarios(vararg components: JComponent) {

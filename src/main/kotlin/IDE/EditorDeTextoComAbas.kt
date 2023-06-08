@@ -24,7 +24,7 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
         val painelInicial = JPanel()
         painelInicial.add(JLabel("Nenhum arquivo aberto!\n Vá em Arquivo > Abrir para começar, ou clique no botão a seguir!"))
         val botao = JButton("Criar um novo arquivo.")
-        botao.addActionListener {
+        botao.addActionListener { // TODO corrigir que isso não está indo para o histórico de arquivos abertos
             criarArquivoVazio(JOptionPane.showInputDialog("Digite o nome do novo arquivo: "))
             tabbedPane.remove(painelInicial)
         }
@@ -51,6 +51,7 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             // TODO: Melhorar otimização desta parte do código
             val linhas = arquivo.readLines().toString() // procurar uma função de ler linhas mais optimizada
             tabbedPane.add(arquivo.name, EditorDeTexto(linhas))
+            tabbedPane.selectedIndex = tabbedPane.tabCount - 1
         }
     }
 
@@ -79,16 +80,17 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             textPane.background = Color(45, 45, 55)
 
             val doc = textPane.styledDocument
-            val style = textPane.addStyle(conteudo, null)
+            val style = textPane.addStyle("", null) //?????
             StyleConstants.setForeground(style, Color.WHITE)
             StyleConstants.setBackground(style, Color.LIGHT_GRAY)
 
-            doc.insertString(doc.length, "texto", style)
+            doc.insertString(doc.length, conteudo, style)
 
             scrollPane.add(textPane)
-            add(scrollPane)
+            add(textPane)
             // scrollPane.rowHeader
         }
+
         // TODO: Funcionalidade de detectar linguagem e adicionar highlights
         //val types = arrayOf("i128", "i64", "i32", "i16")
 

@@ -18,6 +18,7 @@ class ConfigManager() {
             println("Utilizando configurações padrão...")
 
             props.setProperty("editorTamanhoFonte", "20")
+            props.setProperty("arquivosRecentes", "")
         }
     }
 
