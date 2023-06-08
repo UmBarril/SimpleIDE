@@ -4,6 +4,7 @@ import java.awt.*
 import java.io.File
 import javax.swing.*
 import javax.swing.text.DefaultEditorKit
+import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
 
 /**
@@ -13,7 +14,7 @@ import javax.swing.text.StyleConstants
 class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
     private val tabbedPane = JTabbedPane()
     val arquivoAberto: String?
-        get() = (tabbedPane.selectedComponent as? EditorDeTexto)?.caminhoOriginal
+        get() = (tabbedPane.selectedComponent as? EditorDeTexto)?.caminhoDoArquivo
 
     init {
         preferredSize = dimensao
@@ -65,43 +66,70 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
     /**
      * Classe para editar/visualizar o conteúdo de um arquivo.
      * @param conteudo
+     * @param caminhoDoArquivo Caminho do arquivo aberto se houver.
+     * @param apenasLeitura Caso true, o conteúdo não poderá ser editado. Padrão = false
      */
-    class EditorDeTexto(var conteudo: String = "", val caminhoOriginal: String? = null) : JPanel() {
+    class EditorDeTexto(var conteudo: String = "", val caminhoDoArquivo: String? = null, apenasLeitura: Boolean = false): JPanel() {
+        val areaDeEscrita: JTextPane
+        val contadorLinhas: JTextPane
+        val scrollPane: JScrollPane
+
         init {
-            layout = GridLayout(1,1)
+            this@EditorDeTexto.size = Dimension(600, 600)
+            this@EditorDeTexto.layout = GridLayout(1,1)
+            this@EditorDeTexto.background = Color(45,45,55)
 
-            val textPane = JTextPane()
-            val scrollPane = JScrollPane()
+            areaDeEscrita = JTextPane().apply escrita@{
+                this@escrita.preferredSize = this@EditorDeTexto.preferredSize
+                this@escrita.background = Color(45,45,55) // cor de fundo do painel de texto.
+                this@escrita.foreground = Color.WHITE // cor das letras.
+                this@escrita.font = Font("Arial", Font.PLAIN, 20) // fonte do painel de texto.
+                this@escrita.actionMap.get(DefaultEditorKit.beepAction).isEnabled = false // desabilitar sons de beep.
+                this.caretColor = Color.WHITE // cor do cursos piscante.
+                this.isEditable = !apenasLeitura // definir se você pode ou não escrever no arquivo.
 
-            textPane.actionMap.get(DefaultEditorKit.beepAction).isEnabled = false // desabilitar sons de beep
-            textPane.font = Font("Arial", Font.PLAIN, 20)
-            textPane.background = Color(45, 45, 55)
-            textPane.foreground = Color.WHITE
-            textPane.caretColor = Color.WHITE
+                val doc = this.styledDocument
+                val style = this.addStyle("", null) //?????
+                StyleConstants.setForeground(style, Color.WHITE)
+                doc.insertString(doc.length, conteudo, style)
+            }
 
-            val doc = textPane.styledDocument
-            val style = textPane.addStyle("", null) //?????
-            StyleConstants.setForeground(style, Color.WHITE)
-            StyleConstants.setBackground(style, Color.LIGHT_GRAY)
+            contadorLinhas = JTextPane().apply linhas@{
+                this@linhas.preferredSize = Dimension(this@EditorDeTexto.width/6, this@EditorDeTexto.height) // tamanho preferível do contador de linhas.
+                this@linhas.background = Color(95,65,75) // cor de fundo do contador de linhas.
+                this@linhas.foreground = Color.WHITE // cor dos números das linhas.
+                this.isEditable = false // nega a permissão de escrever no contador de linhas.
 
-            doc.insertString(doc.length, conteudo, style)
+                val alinharDireita = SimpleAttributeSet()
+                StyleConstants.setAlignment(alinharDireita, StyleConstants.ALIGN_RIGHT)
 
-            scrollPane.add(textPane)
-            add(textPane)
-            // scrollPane.rowHeader
+                this.setParagraphAttributes(alinharDireita, true) // atributo de parágrafo do contador de linhas
+            }
+            contarLinhas()
+
+            val componente = areaDeEscrita.apply { add(contadorLinhas) }
+            scrollPane = JScrollPane(componente).apply scroll@{
+                this@scroll.preferredSize = this@EditorDeTexto.size
+                this.background = Color.magenta
+                this.isVisible = true
+                this.isOpaque = true
+            }
+
+            this@EditorDeTexto.add(scrollPane)
         }
 
-        override fun paintComponent(g: Graphics?) {
-            super.paintComponent(g)
+        private fun contarLinhas() {
+            val doc = contadorLinhas.styledDocument
+            val docStyle = SimpleAttributeSet()
+            StyleConstants.setForeground(docStyle, Color.WHITE)
+            StyleConstants.setFontSize(docStyle, 20)
+            val conteudo = areaDeEscrita.text
 
-            // TODO: Adicionar botão de fechar aba
+            for (linha in 0 until conteudo.split("\n").size) {
+                doc.insertString(doc.length, "${linha+1}\n", docStyle)
+            }
+
         }
 
-        // TODO: Funcionalidade de detectar linguagem e adicionar highlights
-        //val types = arrayOf("i128", "i64", "i32", "i16")
-
-//        private fun mudarTamanhoTexto(tamanho: Float) {
-//            textPane.font = textPane.font.deriveFont(Font.PLAIN, tamanho)
-//        }
     }
 }
