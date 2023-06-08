@@ -1,5 +1,7 @@
 package IDE
 
+import IDE.util.ResourcesManager.getIcon
+import IDE.util.ResourcesManager.getResource
 import java.awt.*
 import java.awt.event.*
 import java.io.File
@@ -58,7 +60,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                 adicionarVarios(
                     JMenuItem("Abrir...").apply {
                         toolTipText = "Abrir arquivo no sistema"
-                        icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/folder-stand.png"))
+                        icon = getIcon("fugue-icons-3.5.6/icons/folder-stand.png")
                         addActionListener(::clicouBotaoAbrir)
                     },
                     JMenu("Abrir Recentes").also {
@@ -89,14 +91,14 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                         addActionListener(::clicouBotaoSalvar)
                     },
                     JMenuItem("Salvar Como...").apply {
-                        icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/disks.png"))
+                        icon = getIcon("fugue-icons-3.5.6/icons/disks.png")
                         addActionListener(::clicouBotaoSalvarComo)
                     }
                 )
                 addSeparator()
                 add(
                     JMenuItem("Sair").apply {
-                        icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/door-open-out.png"))
+                        icon = getIcon("fugue-icons-3.5.6/icons/door-open-out.png")
                         toolTipText = "Sair da IDE"
                         addActionListener { fecharProgramaSeConfirmar() }
                     }
@@ -108,11 +110,11 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                     JMenu("Mudar Tema").apply {
                         adicionarVarios(
                             JRadioButtonMenuItem("Tema Escuro").apply {
-                                icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/flag-black.png"))
+                                icon = getIcon("fugue-icons-3.5.6/icons/flag-black.png")
                                 addActionListener { mudarTema(TemaIDE.ESCURO) }
                             },
                             JRadioButtonMenuItem("Tema Claro").apply {
-                                icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/flag-white.png"))
+                                icon = getIcon("fugue-icons-3.5.6/icons/flag-white.png")
                                 addActionListener { mudarTema(TemaIDE.CLARO)}
                             }
                         )
@@ -123,7 +125,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                 mnemonic = KeyEvent.VK_C
                 add(
                     JMenuItem("Abrir").apply {
-                        icon = ImageIcon(getResource("fugue-icons-3.5.6/icons/gear.png"))
+                        icon = getIcon("fugue-icons-3.5.6/icons/gear.png")
                         addActionListener(::clicouBotaoAbrirConfiguracoes)
                     }
                 )
@@ -229,9 +231,6 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
 
         janelaConfiguracoes.isVisible = true
     }
-
-    // Função para ajudar o acesso de recursos
-    private fun getResource(resource: String) = javaClass.classLoader.getResource(resource)
 
     // Facilitador para não ter que fazer vários adds em sequência
     private fun JComponent.adicionarVarios(vararg components: JComponent) {

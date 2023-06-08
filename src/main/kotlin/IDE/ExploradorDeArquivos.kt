@@ -1,12 +1,12 @@
 package IDE
 
+import IDE.util.ResourcesManager.getIcon
 import java.awt.Component
 import java.awt.Dimension
 import java.io.File
 import javax.swing.JPanel
 import javax.swing.JScrollPane
 import javax.swing.JTree
-import javax.swing.UIManager
 import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
@@ -127,9 +127,11 @@ class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel
         ): Component {
             super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus)
 
-            icon = if (value is DefaultMutableTreeNode && value.allowsChildren)
-                UIManager.getIcon("FileView.directoryIcon")
-            else UIManager.getIcon("FileView.fileIcon")
+            if (value is DefaultMutableTreeNode) {
+                icon = if (value.allowsChildren) getIcon("fugue-icons-3.5.6/icons/folder.png")
+                else if (value.toString().endsWith(".java")) getIcon("fugue-icons-3.5.6/icons/cup.png")
+                else getIcon("fugue-icons-3.5.6/icons/report-paper.png")
+            }
             return this
         }
     }
