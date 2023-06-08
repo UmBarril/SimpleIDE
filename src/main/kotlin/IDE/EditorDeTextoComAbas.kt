@@ -68,7 +68,7 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
     /**
      * Classe para editar/visualizar o conteúdo de um arquivo.
      * @param conteudo
-     * @param apenasLeitura caso true, o conteudo não podera ser editado. Padrão = false
+     * @param apenasLeitura caso true, o conteúdo não poderá ser editado. Padrão = false
      */
     class EditorDeTexto(var conteudo: String = "", val caminhoOriginal: String? = null, val apenasLeitura: Boolean = false) : JPanel() {
         init {
@@ -83,7 +83,6 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             val doc = textPane.styledDocument
             val style = textPane.addStyle("", null) //?????
             StyleConstants.setForeground(style, Color.WHITE)
-            StyleConstants.setBackground(style, Color.LIGHT_GRAY)
 
             doc.insertString(doc.length, conteudo, style)
 
