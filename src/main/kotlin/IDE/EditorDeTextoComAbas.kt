@@ -79,6 +79,8 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
 
             textPane.font = Font("Arial", Font.PLAIN, 20)
             textPane.background = Color(45, 45, 55)
+            textPane.foreground = Color.WHITE
+            textPane.caretColor = Color.WHITE
 
             val doc = textPane.styledDocument
             val style = textPane.addStyle("", null) //?????
