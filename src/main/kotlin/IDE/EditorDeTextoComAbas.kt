@@ -3,12 +3,12 @@ package IDE
 import java.awt.*
 import java.io.File
 import javax.swing.*
+import javax.swing.border.EmptyBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.text.DefaultEditorKit
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
-import IDE.EditorDeTextoComAbas.EditorDeTexto as EditorDeTexto
 
 /**
  * Classe que segura os editores de texto
@@ -75,7 +75,7 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
         val botao = JButton("Criar um novo arquivo.")
         botao.addActionListener { // TODO corrigir que isso não está indo para o histórico de arquivos abertos
             criarArquivoVazio(JOptionPane.showInputDialog("Digite o nome do novo arquivo: "))
-            tabbedPane.removeTabAt(tabbedPane.indexOfTabComponent(painelInicial))
+            tabbedPane.removeTabAt(0)
         }
         painelInicial.add(botao)
 
@@ -135,25 +135,29 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
                 this@escrita.foreground = Color.WHITE // cor das letras.
                 this@escrita.font = Font("Arial", Font.PLAIN, 20) // fonte do painel de texto.
                 this@escrita.actionMap.get(DefaultEditorKit.beepAction).isEnabled = false // desabilitar sons de beep.
-                this.caretColor = Color.WHITE // cor do cursos piscante.
-                this.isEditable = !apenasLeitura // definir se você pode ou não escrever no arquivo.
+                this@escrita.border = EmptyBorder(0, 0, 0, 0)
+                this@escrita.caretColor = Color.WHITE // cor do cursos piscante.
+                this@escrita.isEditable = !apenasLeitura // definir se você pode ou não escrever no arquivo.
 
-                val doc = this.styledDocument
-                val style = this.addStyle("", null) //?????
+                val doc = this@escrita.styledDocument
+                val style = SimpleAttributeSet()
                 StyleConstants.setForeground(style, Color.WHITE)
                 doc.insertString(doc.length, conteudo, style)
+                StyleConstants.setFontSize(style, 20)
             }
 
             contadorLinhas = JTextPane().apply linhas@{
                 this@linhas.preferredSize = Dimension(this@EditorDeTexto.width/12, this@EditorDeTexto.height) // tamanho preferível do contador de linhas.
+                this@linhas.font = Font("Arial", Font.PLAIN, 17) // fonte do painel de texto.
+                this@linhas.border = EmptyBorder(0, 0, 0, 0)
                 this@linhas.background = Color(35,35,45) // cor de fundo do contador de linhas.
                 this@linhas.foreground = Color.WHITE // cor dos números das linhas.
-                this.isEditable = false // nega a permissão de escrever no contador de linhas.
+                this@linhas.isEditable = false // nega a permissão de escrever no contador de linhas.
 
-                val alinharDireita = SimpleAttributeSet()
-                StyleConstants.setAlignment(alinharDireita, StyleConstants.ALIGN_RIGHT)
+                val alinharCentro = SimpleAttributeSet()
+                StyleConstants.setAlignment(alinharCentro, StyleConstants.ALIGN_CENTER)
 
-                this.setParagraphAttributes(alinharDireita, true) // atributo de parágrafo do contador de linhas
+                this@linhas.setParagraphAttributes(alinharCentro, true) // atributo de parágrafo do contador de linhas
             }
             contarLinhas()
 
@@ -171,9 +175,10 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
                     }
                 } )
 
-            scrollPane = JScrollPane(areaDeEscrita).apply scroll@{
+            scrollPane = JScrollPane().apply scroll@{
                 this@scroll.preferredSize = this@EditorDeTexto.size
             }
+            scrollPane.setViewportView(areaDeEscrita)
             scrollPane.setRowHeaderView(contadorLinhas)
 
             this@EditorDeTexto.add(scrollPane)
@@ -183,9 +188,10 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             val doc = contadorLinhas.styledDocument
             val docStyle = SimpleAttributeSet()
             StyleConstants.setForeground(docStyle, Color.WHITE)
-            StyleConstants.setFontSize(docStyle, 20)
+            StyleConstants.setFontSize(docStyle, 17)
             val conteudo = areaDeEscrita.text
 
+            doc.remove(0, doc.length)
             for (linha in 0 until conteudo.split("\n").size) {
                 doc.insertString(doc.length, "${linha+1}\n", docStyle)
             }
