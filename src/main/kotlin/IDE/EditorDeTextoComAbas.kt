@@ -20,6 +20,15 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
         get() = (tabbedPane.selectedComponent as? EditorDeTexto)?.caminhoDoArquivo
 
     fun abrirArquivo(arquivo: File) {
+        for(i in 0 until tabbedPane.tabCount) {
+            val component = tabbedPane.getComponentAt(i)
+            if(component is EditorDeTexto) {
+                if(component.caminhoDoArquivo == arquivo.path || component.caminhoDoArquivo == arquivo.absolutePath) {
+                    tabbedPane.selectedIndex = i
+                    return
+                }
+            }
+        }
         if(ConfigManager["arquivosPossiveisDeAbrir"].split(';').contains(arquivo.extension)) {
             val opcoes = arrayOf("Apenas essa vez.", "Sempre abrir este tipo de arquivo.", "Cancelar.")
             val resultado = JOptionPane.showOptionDialog(this,

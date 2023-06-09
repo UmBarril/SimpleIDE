@@ -4,9 +4,7 @@ import IDE.util.ResourcesManager.getIcon
 import java.awt.Component
 import java.awt.Dimension
 import java.io.File
-import java.util.*
 import javax.swing.*
-import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
@@ -52,6 +50,10 @@ class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel()
         raiz.carregarTodosOsSubArquivos()
 
         arvore = JTree(raiz)
+        scrollPane = JScrollPane(this.arvore)
+        scrollPane.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
+
+        this.add(scrollPane)
         arvore.apply {
             addTreeSelectionListener { // carregamento Lazy das pastas
                 val nodeSelecionado = arvore.lastSelectedPathComponent as ArquivoNode
@@ -66,14 +68,11 @@ class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel()
             }
             cellRenderer = RenderizadorDeNodes()
         }
-        scrollPane = JScrollPane(this.arvore)
-        this.add(scrollPane)
-
         modelo.reload()
     }
 
     // Adicionar um listener que será acionado quando algum elemento dos arquivos for sleecionado
-    fun adicionarArquivoSlecionadoListener(listener: (File) -> Unit) {
+    fun adicionarArquivoSelecionadoListener(listener: (File) -> Unit) {
         listeners.add(listener)
     }
 
