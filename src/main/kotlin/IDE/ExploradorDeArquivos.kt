@@ -11,16 +11,6 @@ import javax.swing.tree.DefaultTreeModel
 
 class CaminhoNaoValidoException(caminho: String) : Exception("Caminho inserido (\"$caminho\"não é válido")
 
-// Seleciona o arquivo que o usuário clicou
-// pega todos os arquivos do arquivo que o usuário
-// selecionou(caso o arquivo for uma pasta) em formato de DefaultMutableTreeNode
-// no caso, o arquivo que o usuário selecionou é o arquivo da linha 30
-// caso o source do evento não for null, adicione o DefaultMutableTreeNode nele
-// pega o source do evento como um Default mutable tree(pode ser null)//        raiz.listFiles()?.forEach { arquivo ->
-//            if (arquivo.isDirectory) raizNode.add(DefaultMutableTreeNode(arquivo.name, true))
-//            else raizNode.add(DefaultMutableTreeNode(arquivo.name, false))
-//        }
-
 class ArquivoNode(val arquivo: File) : DefaultMutableTreeNode(arquivo.name, arquivo.isDirectory) {
     fun carregarTodosOsSubArquivos() {
         arquivo.listFiles()?.forEach {
@@ -29,6 +19,9 @@ class ArquivoNode(val arquivo: File) : DefaultMutableTreeNode(arquivo.name, arqu
     }
 }
 
+// FIXME
+//  - PROIBIR DE ABRIR ARQUIVOS DO SISTEMA
+//  - ESCONDER DOTFILES
 class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel() {
     private val arvore: JTree
     private val scrollPane: JScrollPane

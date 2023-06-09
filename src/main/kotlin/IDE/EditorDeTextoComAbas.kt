@@ -6,9 +6,8 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
-import javax.swing.text.DefaultEditorKit
-import javax.swing.text.SimpleAttributeSet
-import javax.swing.text.StyleConstants
+import javax.swing.text.*
+import javax.swing.text.html.HTMLEditorKit
 
 /**
  * Classe que segura os editores de texto
@@ -83,8 +82,8 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
         add(tabbedPane)
     }
 
-    fun criarArquivoVazio(nome: String) {
-        tabbedPane.addTab(nome, EditorDeTexto(""))
+    private fun criarArquivoVazio(nome: String) {
+        tabbedPane.addTab(nome, EditorDeTexto())
     }
 
     fun salvarArquivo(caminho: String) {
@@ -104,7 +103,6 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
 
     private fun abrirAquivoSemVerificacao(arquivo: File) {
         if (arquivo.isFile) {
-
             // TODO: Melhorar otimização desta parte do código
             val linhas = arquivo.readLines() // procurar uma função de ler linhas mais otimizada
 
@@ -119,82 +117,103 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
      * @param caminhoDoArquivo Caminho do arquivo aberto se houver.
      * @param apenasLeitura Caso true, o conteúdo não poderá ser editado. Padrão = false
      */
-    class EditorDeTexto(var conteudo: String = "", val caminhoDoArquivo: String? = null, var apenasLeitura: Boolean = false): JPanel() {
+    class EditorDeTexto(
+        var conteudo: String = "",
+        val caminhoDoArquivo: String? = null,
+        private var apenasLeitura: Boolean = false ,
+        tamanho: Dimension = Dimension(600, 600)
+    ) : JPanel() {
         private val areaDeEscrita: JTextPane
-        private val contadorLinhas: JTextPane
-        private val scrollPane: JScrollPane
+        private val contadorDeLinhas: JTextPane
 
         init {
-            this@EditorDeTexto.size = Dimension(600, 600)
-            this@EditorDeTexto.layout = GridLayout(1,1)
-            this@EditorDeTexto.background = Color(45,45,55)
+            size = tamanho
+            layout = GridLayout(1, 1)
+            background = Color(45, 45, 55)
 
-            areaDeEscrita = JTextPane().apply escrita@{
-                this@escrita.preferredSize = this@EditorDeTexto.preferredSize
-                this@escrita.background = Color(45,45,55) // cor de fundo do painel de texto.
-                this@escrita.foreground = Color.WHITE // cor das letras.
-                this@escrita.font = Font("Arial", Font.PLAIN, 20) // fonte do painel de texto.
-                this@escrita.actionMap.get(DefaultEditorKit.beepAction).isEnabled = false // desabilitar sons de beep.
-                this@escrita.border = EmptyBorder(0, 0, 0, 0)
-                this@escrita.caretColor = Color.WHITE // cor do cursos piscante.
-                this@escrita.isEditable = !apenasLeitura // definir se você pode ou não escrever no arquivo.
+            areaDeEscrita = criarAreaDeEscrita(preferredSize)
+            contadorDeLinhas = criarContadorDeLinhas(Dimension(this.width / 12, this.height))
 
-                val doc = this@escrita.styledDocument
-                val style = SimpleAttributeSet()
-                StyleConstants.setForeground(style, Color.WHITE)
-                doc.insertString(doc.length, conteudo, style)
-                StyleConstants.setFontSize(style, 20)
+            val scrollPane = JScrollPane().apply {
+                preferredSize = tamanho
+                setRowHeaderView(contadorDeLinhas)
+                setViewportView(areaDeEscrita)
             }
-
-            contadorLinhas = JTextPane().apply linhas@{
-                this@linhas.preferredSize = Dimension(this@EditorDeTexto.width/12, this@EditorDeTexto.height) // tamanho preferível do contador de linhas.
-                this@linhas.font = Font("Arial", Font.PLAIN, 17) // fonte do painel de texto.
-                this@linhas.border = EmptyBorder(0, 0, 0, 0)
-                this@linhas.background = Color(35,35,45) // cor de fundo do contador de linhas.
-                this@linhas.foreground = Color.WHITE // cor dos números das linhas.
-                this@linhas.isEditable = false // nega a permissão de escrever no contador de linhas.
-
-                val alinharCentro = SimpleAttributeSet()
-                StyleConstants.setAlignment(alinharCentro, StyleConstants.ALIGN_CENTER)
-
-                this@linhas.setParagraphAttributes(alinharCentro, true) // atributo de parágrafo do contador de linhas
-            }
-            contarLinhas()
-
-                areaDeEscrita.styledDocument.addDocumentListener(object : DocumentListener {
-                    override fun insertUpdate(e: DocumentEvent?) {
-                        contarLinhas()
-                    }
-
-                    override fun removeUpdate(e: DocumentEvent?) {
-                        contarLinhas()
-                    }
-
-                    override fun changedUpdate(e: DocumentEvent?) {
-                        contarLinhas()
-                    }
-                } )
-
-            scrollPane = JScrollPane().apply scroll@{
-                this@scroll.preferredSize = this@EditorDeTexto.size
-            }
-            scrollPane.setViewportView(areaDeEscrita)
-            scrollPane.setRowHeaderView(contadorLinhas)
-
-            this@EditorDeTexto.add(scrollPane)
+            atualizarContadorDeLinhas()
+            areaDeEscrita.styledDocument.addDocumentListener(object : DocumentListener {
+                override fun insertUpdate(e: DocumentEvent?) = atualizarContadorDeLinhas()
+                override fun removeUpdate(e: DocumentEvent?) = atualizarContadorDeLinhas()
+                override fun changedUpdate(e: DocumentEvent?) = atualizarContadorDeLinhas()
+            })
+            this.add(scrollPane)
         }
 
-        private fun contarLinhas() {
-            val doc = contadorLinhas.styledDocument
+        private fun criarAreaDeEscrita(tamanhoPreferivel: Dimension): JTextPane {
+            val areaDeEscrita = JTextPane()
+
+            areaDeEscrita.preferredSize = tamanhoPreferivel
+            areaDeEscrita.background = Color(45, 45, 55) // cor de fundo do painel de texto.
+            areaDeEscrita.foreground = Color.WHITE // cor das letras.
+            areaDeEscrita.font = Font("Arial", Font.PLAIN, 20) // fonte do painel de texto.
+            areaDeEscrita.actionMap.get(DefaultEditorKit.beepAction).isEnabled = false // desabilitar sons de beep. NAO FUNCIONA FIXME
+            areaDeEscrita.border = EmptyBorder(0, 0, 0, 0)
+            areaDeEscrita.caretColor = Color.WHITE // cor do cursos piscante.
+            areaDeEscrita.isEditable = !apenasLeitura // definir se você pode ou não escrever no arquivo.
+
+            val doc = areaDeEscrita.styledDocument
+            val style = SimpleAttributeSet()
+
+            StyleConstants.setForeground(style, Color.WHITE)
+            doc.insertString(doc.length, conteudo, style)
+            StyleConstants.setFontSize(style, 20)
+
+            return areaDeEscrita
+        }
+
+        private fun criarContadorDeLinhas(tamanhoPreferivel: Dimension): JTextPane {
+            val contadorDeLinhas = JTextPane()
+
+            contadorDeLinhas.preferredSize = tamanhoPreferivel
+            contadorDeLinhas.font = Font("Arial", Font.PLAIN, 17) // fonte do painel de texto.
+            contadorDeLinhas.border = EmptyBorder(0, 0, 0, 0)
+            contadorDeLinhas.background = Color(35, 35, 45) // cor de fundo do contador de linhas.
+            contadorDeLinhas.foreground = Color.WHITE // cor dos números das linhas.
+            contadorDeLinhas.isEditable = false // nega a permissão de escrever no contador de linhas.
+
+            val alinharCentro = SimpleAttributeSet()
+            StyleConstants.setAlignment(alinharCentro, StyleConstants.ALIGN_CENTER)
+            contadorDeLinhas.setParagraphAttributes(alinharCentro, true) // atributo de parágrafo do contador de linhas
+
+            return contadorDeLinhas
+        }
+
+        private var ultimaContagemLinhas = 0
+
+        private fun atualizarContadorDeLinhas() {
+            val doc = contadorDeLinhas.styledDocument
+
             val docStyle = SimpleAttributeSet()
             StyleConstants.setForeground(docStyle, Color.WHITE)
             StyleConstants.setFontSize(docStyle, 17)
-            val conteudo = areaDeEscrita.text
 
-            doc.remove(0, doc.length)
-            for (linha in 0 until conteudo.split("\n").size) {
-                doc.insertString(doc.length, "${linha+1}\n", docStyle)
+            // FIXME isso não funciona, n sei pq
+            val contagemAtual = getContagemLinhas()
+            if(ultimaContagemLinhas < contagemAtual) {
+                doc.remove(0,doc.length)
             }
+            for (linha in ultimaContagemLinhas until contagemAtual) {
+                doc.insertString(ultimaContagemLinhas +1, "${linha + 1} ", docStyle)
+            }
+            ultimaContagemLinhas = contagemAtual
+
+//            // codigo antigo... isso funcionava, tbm n compreendo... (é para ser a mesma coisa que o de cima)
+//            for (linha in 0..getContagemLinhas())
+//                doc.insertString(0, "${linha + 1} ", docStyle)
+//            }
+        }
+
+        private fun getContagemLinhas(): Int {
+            return this.areaDeEscrita.document.defaultRootElement.elementCount
         }
     }
 }
