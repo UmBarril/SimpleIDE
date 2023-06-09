@@ -12,9 +12,36 @@ import javax.swing.text.StyleConstants
  * @param dimensao tamanho do componente
  */
 class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
+
     private val tabbedPane = JTabbedPane()
     val arquivoAberto: String?
         get() = (tabbedPane.selectedComponent as? EditorDeTexto)?.caminhoDoArquivo
+
+    fun abrirArquivo(arquivo: File) {
+        if(ConfigManager["arquivosPossiveisDeAbrir"].split(';').contains(arquivo.extension)) {
+            val opcoes = arrayOf("Apenas essa vez.", "Sempre abrir este tipo de arquivo.", "Cancelar.")
+            val resultado = JOptionPane.showOptionDialog(this,
+                "A extensão de arquivo '${arquivo.extension}' não está na nossa lista de arquivos suportados. \n Deseja tentar abrir mesmo assim? (pode travar o programa)",
+                "Extensão de arquivo desconhecida.",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                opcoes,
+                opcoes[0])
+
+            when(resultado) {
+                JOptionPane.YES_OPTION -> {}
+                JOptionPane.NO_OPTION -> arquivo.extension + ConfigManager["arquivosPossiveisDeAbrir"]
+                JOptionPane.CANCEL_OPTION -> return
+            }
+        }
+        abrirAquivoSemVerificacao(arquivo)
+    }
+
+    /**
+     * Abrir o arquivo a partir do seu caminho no sistema.
+     */
+    fun abrirArquivo(caminho: String): Unit = abrirArquivo(File(caminho))
 
     init {
         preferredSize = dimensao
@@ -37,30 +64,23 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
         tabbedPane.addTab(nome, EditorDeTexto(""))
     }
 
-    /**
-     * Abrir o arquivo pelo seu caminho.
-     */
-    fun abrirAquivo(caminho: String) = abrirAquivo(File(caminho))
-
-    /**
-     * Abrir o arquivo pelo objeto do arquivo.
-     */
-    fun abrirAquivo(arquivo: File) {
-        if (arquivo.isFile) {
-            // TODO: Melhorar otimização desta parte do código
-            val linhas = arquivo.readLines() // procurar uma função de ler linhas mais otimizada
-
-            tabbedPane.add(arquivo.name, EditorDeTexto(linhas.joinToString("\n"), arquivo.absolutePath))
-            tabbedPane.selectedIndex = tabbedPane.tabCount - 1
-        }
-    }
-
     fun salvarArquivo(caminho: String) {
         salvarArquivo(File(caminho))
     }
 
     fun salvarArquivo(arquivo: File) {
         arquivo.writeText((tabbedPane.selectedComponent as EditorDeTexto).conteudo)
+    }
+
+    private fun abrirAquivoSemVerificacao(arquivo: File) {
+        if (arquivo.isFile) {
+
+            // TODO: Melhorar otimização desta parte do código
+            val linhas = arquivo.readLines() // procurar uma função de ler linhas mais otimizada
+
+            tabbedPane.add(arquivo.name, EditorDeTexto(linhas.joinToString("\n"), arquivo.absolutePath))
+            tabbedPane.selectedIndex = tabbedPane.tabCount - 1
+        }
     }
 
     /**

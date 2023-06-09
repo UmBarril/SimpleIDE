@@ -1,6 +1,5 @@
 package IDE
 
-import java.awt.Color
 import java.awt.Dimension
 import java.awt.Font
 import java.awt.Toolkit
@@ -13,7 +12,7 @@ fun main() {
 
     try {
 //            UIManager.setLookAndFeel("java.swing.plaf.windows.WindowLookAndFeel")
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName())
     } catch (e: Exception) {
         println("Não foi encontrado WindowsLookAndFeel")
         e.printStackTrace()
@@ -21,22 +20,18 @@ fun main() {
 
     val telaDeCarregamento = JWindow().apply { // IDEA: Colocar imagem de carregamento aqui
         add(JLabel("Carregando...").apply { font = Font("Arial", Font.BOLD, 50); })
-        background = Color(0,0,0,0)
+//        background = Color(0,0,0,0)
 
         pack()
         isVisible = true
         setLocationRelativeTo(null)
     }
-    var janelaPrincipal: JanelaPrincipal? = null
     SwingUtilities.invokeLater { // invokeLater para não haver problemas com Threads mais tarde...
         try{
-            janelaPrincipal = JanelaPrincipal(Dimension(larguraJanela, alturaJanela))
-            janelaPrincipal!!.isVisible = true
+            val janelaPrincipal = JanelaPrincipal(Dimension(larguraJanela, alturaJanela))
+            janelaPrincipal.isVisible = true
         } catch(e: Exception) {
-            val errorFrame = JFrame("Erro ao iniciar o programa! Veja o STDOUT para analisar o erro.")
-            errorFrame.pack()
-            errorFrame.isVisible = true
-            errorFrame.setLocationRelativeTo(null)
+            JOptionPane.showConfirmDialog(null, "Erro ao iniciar o programa! Veja o STDOUT para analisar o erro.", "Erro!", JOptionPane.OK_CANCEL_OPTION)
             e.printStackTrace()
         } finally {
             telaDeCarregamento.dispose()

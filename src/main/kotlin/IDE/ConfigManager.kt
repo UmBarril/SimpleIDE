@@ -5,7 +5,7 @@ import java.io.FileReader
 import java.io.FileWriter
 import java.util.Properties
 
-class ConfigManager() {
+object ConfigManager {
     private val props = Properties()
     private val arquivoConfig = File("config.properties")
 
@@ -19,6 +19,10 @@ class ConfigManager() {
 
             props.setProperty("editorTamanhoFonte", "20")
             props.setProperty("arquivosRecentes", "")
+            val arquivosSuportadosNativamente = arrayOf(
+                ".java", ".c", ".txt", ".py", ".kt", ".kts", ".md", ".html", ".css", ".js", ".php", ".json", ".cpp", ".pl", ".cs", ".bat", ".ps1"
+            )
+            props.setProperty("arquivosPossiveisDeAbrir", arquivosSuportadosNativamente.joinToString(";"))
         }
     }
 
@@ -26,6 +30,6 @@ class ConfigManager() {
         props.store(FileWriter(arquivoConfig), "Configurações gerais da SimpleIDE")
     }
 
-    operator fun get(chave: String)  = props.getProperty(chave)
-    operator fun set(chave: String, valor: String) = props.setProperty(chave, valor)
+    operator fun get(chave: String): String = props.getProperty(chave)
+    operator fun set(chave: String, valor: String): Any = props.setProperty(chave, valor)
 }

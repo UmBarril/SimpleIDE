@@ -12,13 +12,11 @@ import kotlin.system.exitProcess
 class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
     private var pastaAberta = System.getProperty("user.home")
 
-    private val explorador: ExploradorDeArquivos
-    private val editor: EditorDeTextoComAbas // painel que fica a direita ou no meio
-
-    private val config: ConfigManager = ConfigManager()
+    private var explorador: ExploradorDeArquivos
+    private var editor: EditorDeTextoComAbas
 
     init {
-        config.carregar()
+        ConfigManager.carregar()
 
         layout = GridLayout()
 
@@ -30,15 +28,14 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         iconImage = ImageIcon("").image // TODO
         jMenuBar = criarMenuBar()
 
-
-        val tamanhoExplorador = Dimension((size.width * 0.2).roundToInt(), size.height - jMenuBar.height)
-        val tamanhoEditor = Dimension((size.width * 0.8).roundToInt(), size.height - jMenuBar.height)
+        val tamanhoExplorador = Dimension((tamanho.width * 0.2).roundToInt(), tamanho.height - jMenuBar.height)
+        val tamanhoEditor = Dimension((tamanho.width * 0.8).roundToInt(), tamanho.height - jMenuBar.height)
 
         explorador = ExploradorDeArquivos(pastaAberta, tamanhoExplorador)
         editor = EditorDeTextoComAbas(tamanhoEditor)
 
         explorador.adicionarArquivoSlecionadoListener {
-            editor.abrirAquivo(it)
+            editor.abrirArquivo(it)
         }
 
         add(
@@ -54,7 +51,6 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         configurarMenuDeContexto()
         pack()
     }
-
     // Código para adicionar a funcionalidade de menu de contexto no explorador.
     // TODO
     private fun configurarMenuDeContexto() {
@@ -81,10 +77,10 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
             JMenu("Arquivo").apply {
                 mnemonic = KeyEvent.VK_A
                 adicionarVarios(
-                    JMenuItem("Abrir...").apply {
+                    JMenuItem("Abrir Pasta...").apply {
                         toolTipText = "Abrir pasta no sistema"
                         icon = getIcon("fugue-icons-3.5.6/icons/folder-stand.png")
-                        addActionListener(::clicouBotaoAbrir)
+                        addActionListener(::clicouBotaoAbrirPasta)
                     },
                     JMenuItem("Abrir Arquivo...").apply {
                         toolTipText = "Abrir arquivo no sistema"
@@ -95,7 +91,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                         addMouseListener(object : MouseListener {
                             override fun mouseEntered(e: MouseEvent?) {
                                 it.removeAll()
-                                val arquivosRecentes = config["arquivosRecentes"].split(";")
+                                val arquivosRecentes = ConfigManager["arquivosRecentes"].split(";")
                                 if(arquivosRecentes.isEmpty()) {
                                     it.add(JMenuItem("Nunhum arquivo aberto ainda."))
                                     return
@@ -103,7 +99,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                                 for(i in arquivosRecentes.indices) {
                                     it.add(JMenuItem("${i+1}: ${arquivosRecentes[i]}").apply {
                                         addActionListener {
-                                            editor.abrirAquivo(arquivosRecentes[i])
+                                            editor.abrirArquivo(arquivosRecentes[i])
                                         }
                                     })
                                 }
@@ -169,18 +165,36 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         }
     }
 
-    private fun clicouBotaoAbrir(e: ActionEvent) {
+    private fun clicouBotaoAbrirPasta(e: ActionEvent) {
         val fileChooser = JFileChooser(pastaAberta)
+        fileChooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
+        fileChooser.dialogType = JFileChooser.OPEN_DIALOG
 
         val resultado = fileChooser.showOpenDialog(this)
         if (resultado == JFileChooser.APPROVE_OPTION) {
             val f = File(fileChooser.selectedFile.absolutePath)
-            editor.abrirAquivo(f)
-            if(config["arquivosRecentes"].isEmpty()) {
-                config["arquivosRecentes"] = f.path
+
+            val tamanhoExplorador = Dimension((size.width * 0.2).roundToInt(), size.height - jMenuBar.height)
+            explorador = ExploradorDeArquivos(f, tamanhoExplorador)
+
+            pastaAberta = f.absolutePath
+        }
+    }
+
+    private fun clicouBotaoAbrir(e: ActionEvent) {
+        val fileChooser = JFileChooser(pastaAberta)
+        fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
+        fileChooser.dialogType = JFileChooser.OPEN_DIALOG
+
+        val resultado = fileChooser.showOpenDialog(this)
+        if (resultado == JFileChooser.APPROVE_OPTION) {
+            val f = File(fileChooser.selectedFile.absolutePath)
+            editor.abrirArquivo(f)
+            if(ConfigManager["arquivosRecentes"].isEmpty()) {
+                ConfigManager["arquivosRecentes"] = f.path
             } else {
-                val cincoMaisRecentes: List<String> = config["arquivosRecentes"].split(';', limit=5)
-                config["arquivosRecentes"] = f.path + ";" + cincoMaisRecentes.joinToString()
+                val cincoMaisRecentes: List<String> = ConfigManager["arquivosRecentes"].split(';', limit=5)
+                ConfigManager["arquivosRecentes"] = f.path + ";" + cincoMaisRecentes.joinToString()
             }
         }
     }
@@ -196,6 +210,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
 
     private fun clicouBotaoSalvarComo(e: ActionEvent?) {
         val fileChooser = JFileChooser(pastaAberta)
+        fileChooser.dialogType = JFileChooser.SAVE_DIALOG
 
         val resultado = fileChooser.showOpenDialog(this)
         if(resultado == JFileChooser.APPROVE_OPTION) {
@@ -236,13 +251,13 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         botaoSalvar.isEnabled = false
         val botaoCancelar = JButton("Cancelar")
 
-        spinnerTamanhoFonte.value = config["editorTamanhoFonte"].toInt()
+        spinnerTamanhoFonte.value = ConfigManager["editorTamanhoFonte"].toInt()
         spinnerTamanhoFonte.addChangeListener {
             botaoSalvar.isEnabled = true
         }
         botaoSalvar.addActionListener {
-            config["editorTamanhoFonte"] = spinnerTamanhoFonte.value.toString()
-            config.salvar()
+            ConfigManager["editorTamanhoFonte"] = spinnerTamanhoFonte.value.toString()
+            ConfigManager.salvar()
             janelaConfiguracoes.dispose()
         }
         botaoCancelar.addActionListener {
