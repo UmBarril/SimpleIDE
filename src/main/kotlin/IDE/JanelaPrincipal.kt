@@ -37,7 +37,9 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         explorador = ExploradorDeArquivos(pastaAberta, tamanhoExplorador)
         editor = EditorDeTextoComAbas(tamanhoEditor)
 
-        explorador.addTreeSelectionListener { editor.abrirAquivo(it.path.toString()) }
+        explorador.adicionarArquivoSlecionadoListener {
+            editor.abrirAquivo(it)
+        }
 
         add(
             JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.explorador, this.editor).apply {
@@ -49,7 +51,28 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                 }
             }
         )
+        configurarMenuDeContexto()
         pack()
+    }
+
+    // Código para adicionar a funcionalidade de menu de contexto no explorador.
+    // TODO
+    private fun configurarMenuDeContexto() {
+        val popupMenu = JPopupMenu().apply {
+            add(JMenuItem("gay?"))
+        }
+        val listener = object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent?) {
+                e ?: throw NullPointerException()
+
+                if (SwingUtilities.isRightMouseButton(e)) {
+//                    val row = arvore.getClosestRowForLocation(e.x, e.y);
+//                    arvore.setSelectionRow(row);
+                    popupMenu.show(e.component, e.x, e.y)
+                }
+            }
+        }
+        explorador.addMouseListener(listener)
     }
 
     private fun criarMenuBar(): JMenuBar {
@@ -59,6 +82,11 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                 mnemonic = KeyEvent.VK_A
                 adicionarVarios(
                     JMenuItem("Abrir...").apply {
+                        toolTipText = "Abrir pasta no sistema"
+                        icon = getIcon("fugue-icons-3.5.6/icons/folder-stand.png")
+                        addActionListener(::clicouBotaoAbrir)
+                    },
+                    JMenuItem("Abrir Arquivo...").apply {
                         toolTipText = "Abrir arquivo no sistema"
                         icon = getIcon("fugue-icons-3.5.6/icons/folder-stand.png")
                         addActionListener(::clicouBotaoAbrir)
@@ -145,8 +173,8 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         val fileChooser = JFileChooser(pastaAberta)
 
         val resultado = fileChooser.showOpenDialog(this)
-        val f = File(fileChooser.selectedFile.absolutePath)
         if (resultado == JFileChooser.APPROVE_OPTION) {
+            val f = File(fileChooser.selectedFile.absolutePath)
             editor.abrirAquivo(f)
             if(config["arquivosRecentes"].isEmpty()) {
                 config["arquivosRecentes"] = f.path

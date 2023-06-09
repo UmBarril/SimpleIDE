@@ -4,141 +4,117 @@ import IDE.util.ResourcesManager.getIcon
 import java.awt.Component
 import java.awt.Dimension
 import java.io.File
-import javax.swing.JPanel
-import javax.swing.JScrollPane
-import javax.swing.JTree
+import java.util.*
+import javax.swing.*
 import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
+import javax.swing.tree.DefaultTreeModel
 
-class ExploradorDeArquivos(caminhoInicial: String, dimensao: Dimension) : JPanel() {
+class CaminhoNaoValidoException(caminho: String) : Exception("Caminho inserido (\"$caminho\"não é válido")
 
-    private var arvore: JTree
-    private val raiz: DefaultMutableTreeNode
+// Seleciona o arquivo que o usuário clicou
+// pega todos os arquivos do arquivo que o usuário
+// selecionou(caso o arquivo for uma pasta) em formato de DefaultMutableTreeNode
+// no caso, o arquivo que o usuário selecionou é o arquivo da linha 30
+// caso o source do evento não for null, adicione o DefaultMutableTreeNode nele
+// pega o source do evento como um Default mutable tree(pode ser null)//        raiz.listFiles()?.forEach { arquivo ->
+//            if (arquivo.isDirectory) raizNode.add(DefaultMutableTreeNode(arquivo.name, true))
+//            else raizNode.add(DefaultMutableTreeNode(arquivo.name, false))
+//        }
+
+class ArquivoNode(val arquivo: File) : DefaultMutableTreeNode(arquivo.name, arquivo.isDirectory) {
+    fun carregarTodosOsSubArquivos() {
+        arquivo.listFiles()?.forEach {
+            add(ArquivoNode(it))
+        }
+    }
+}
+
+class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel() {
+    private val arvore: JTree
     private val scrollPane: JScrollPane
+    private val listeners = mutableListOf<(File) -> Unit>()
+
+    constructor(pastaParaAbrir: String, dimensao: Dimension) : this(File(pastaParaAbrir), dimensao)
 
     init {
-        this.preferredSize = dimensao
-        this.minimumSize = dimensao
-        this.isVisible = true
-        this.isOpaque = true
+        preferredSize = dimensao
+        minimumSize = dimensao
 
-        raiz = arquivosDaRaiz(File(caminhoInicial))
+        if (!pastaParaAbrir.isDirectory) {
+            throw CaminhoNaoValidoException(pastaParaAbrir.absolutePath)
+        }
 
-        arvore = JTree(raiz).apply {
-            addTreeSelectionListener { selectEvent ->
-                val source = selectEvent.source as? DefaultMutableTreeNode // pega o source do evento como um Default mutable tree(pode ser null)
-                File(selectEvent.path.toString()). // Seleciona o arquivo que o usuário clicou
+        val modelo = DefaultTreeModel(ArquivoNode(pastaParaAbrir))
+        val raiz = modelo.root as ArquivoNode
 
-                    carregarArquivosDaPasta()?. // pega todos os arquivos do arquivo que o usuário
-                                                // selecionou(caso o arquivo for uma pasta) em formato de DefaultMutableTreeNode
-                                                // no caso, o arquivo que o usuário selecionou é o arquivo da linha 30
+        raiz.carregarTodosOsSubArquivos()
 
-                    let{source?.add(it)} // caso o source do evento não for null, adicione o DefaultMutableTreeNode nele
+        arvore = JTree(raiz)
+        arvore.apply {
+            addTreeSelectionListener { // carregamento Lazy das pastas
+                val nodeSelecionado = arvore.lastSelectedPathComponent as ArquivoNode
+                if (nodeSelecionado.allowsChildren) {
+                    nodeSelecionado.carregarTodosOsSubArquivos()
+                } else {
+                    listeners.forEach {
+                        it.invoke(nodeSelecionado.arquivo)
+                    }
+                }
+                modelo.reload()
             }
             cellRenderer = RenderizadorDeNodes()
-            preferredSize = dimensao
-            isVisible = true
-            isOpaque = true
         }
-
-        scrollPane = JScrollPane(arvore).apply {
-            preferredSize = dimensao
-            isVisible = true
-            isOpaque = true
-        }
-
+        scrollPane = JScrollPane(this.arvore)
         this.add(scrollPane)
 
-//        Código para adicionar a funcionalidade de menu de contexto no explorador.
-//        val popupMenu = PopupMenu() // adicionar coisas a isso
-//        addMouseListener(object : MouseListener {
-//            override fun mouseClicked(e: MouseEvent?) {
-//                e ?: throw NullPointerException()
-//
-//                if (SwingUtilities.isRightMouseButton(e)) {
-//                    val row = arvore.getClosestRowForLocation (e.x, e.y);
-//                    arvore.setSelectionRow(row);
-//                    popupMenu.show(e.getComponent(), e.getX(), e.getY());
-//                }
-//            }
-//            override fun mousePressed(e: MouseEvent?) {
-//                TODO("Not yet implemented")
-//            }
-//            override fun mouseReleased(e: MouseEvent?) {
-//                TODO("Not yet implemented")
-//            }
-//            override fun mouseEntered(e: MouseEvent?) {
-//                TODO("Not yet implemented")
-//            }
-//            override fun mouseExited(e: MouseEvent?) {
-//                TODO("Not yet implemented")
-//            }
-//        })
-
+        modelo.reload()
     }
 
-    fun addTreeSelectionListener(listener: TreeSelectionListener) {
-        arvore.addTreeSelectionListener(listener)
-    }
-
-    private fun arquivosDaRaiz(raiz: File): DefaultMutableTreeNode {
-        val raizNode = DefaultMutableTreeNode(raiz.name)
-        if (!raiz.isDirectory) return raizNode
-
-        raiz.listFiles()?.forEach { arquivo ->
-            if (arquivo.isDirectory) raizNode.add(DefaultMutableTreeNode(arquivo.name, true))
-            else raizNode.add(DefaultMutableTreeNode(arquivo.name, false))
-        }
-        return raizNode
+    // Adicionar um listener que será acionado quando algum elemento dos arquivos for sleecionado
+    fun adicionarArquivoSlecionadoListener(listener: (File) -> Unit) {
+        listeners.add(listener)
     }
 
     fun atualizarDimensao(largura: Int) {
-        scrollPane.preferredSize = Dimension(largura, this.height)
+        scrollPane.preferredSize = Dimension(largura - 25, this.height)
         arvore.preferredSize = scrollPane.size
     }
-
-    private fun File.carregarArquivosDaPasta(): DefaultMutableTreeNode? {
-        if (!this.isDirectory) return null
-
-        return (
-            DefaultMutableTreeNode().apply {
-                this@carregarArquivosDaPasta.listFiles()?.forEach { arquivo -> // para cada arquivo da pasta
-                    if (arquivo.isDirectory) this.add(DefaultMutableTreeNode(arquivo.name, true)) // caso for pasta, adicione o node dessa forma
-                    else this.add(DefaultMutableTreeNode(arquivo.name, false)) // caso contrario, adicione o node dessa forma.
-                }
-            }
-        )
-
-    }
-
-    class RenderizadorDeNodes: DefaultTreeCellRenderer() {
-
-        override fun getTreeCellRendererComponent(
-            tree: JTree?,
-            value: Any?,
-            sel: Boolean,
-            expanded: Boolean,
-            leaf: Boolean,
-            row: Int,
-            hasFocus: Boolean
-        ): Component {
-            super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus)
-
-            if (value is DefaultMutableTreeNode) {
-                icon = if (value.allowsChildren) getIcon("fugue-icons-3.5.6/icons/folder.png")
-                else if (value.toString().endsWith(".java")) getIcon("fugue-icons-3.5.6/icons/cup.png")
-                else getIcon("fugue-icons-3.5.6/icons/report-paper.png")
-            }
-            return this
-        }
-    }
-
 }
 
+class RenderizadorDeNodes : DefaultTreeCellRenderer() {
+    override fun getTreeCellRendererComponent(
+        tree: JTree?,
+        value: Any?,
+        sel: Boolean,
+        expanded: Boolean,
+        leaf: Boolean,
+        row: Int,
+        hasFocus: Boolean
+    ): Component {
+        super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus)
 
-
-
-
-
-
+        val arquivoNode = value as ArquivoNode
+        icon = when {
+            arquivoNode.allowsChildren -> getIcon("fugue-icons-3.5.6/icons/folder.png")
+            arquivoNode.arquivo.endsWith(".java") -> getIcon("fugue-icons-3.5.6/icons/cup.png")
+            arquivoNode.arquivo.endsWith(".php") -> getIcon("fugue-icons-3.5.6/icons/script-php.png")
+            arquivoNode.arquivo.endsWith(".docx") -> getIcon("fugue-icons-3.5.6/icons/script-word.png")
+            arquivoNode.arquivo.endsWith(".swf") -> getIcon("fugue-icons-3.5.6/icons/script-word.png")
+            arquivoNode.arquivo.endsWith(".kt") -> getIcon("fugue-icons-3.5.6/icons/script-attribute-k.png")
+            arquivoNode.arquivo.endsWith(".c") -> getIcon("fugue-icons-3.5.6/icons/script-attribute-c.png")
+            arquivoNode.arquivo.endsWith(".exe") -> getIcon("fugue-icons-3.5.6/icons/document-binary.png")
+            arquivoNode.arquivo.endsWith(".cs") -> getIcon("fugue-icons-3.5.6/icons/script-visual-studio.png")
+            arquivoNode.arquivo.endsWith(".cs") -> getIcon("fugue-icons-3.5.6/icons/script-visual-studio.png")
+            arquivoNode.arquivo.endsWith(".json") -> getIcon("fugue-icons-3.5.6/icons/json.png")
+            arquivoNode.arquivo.endsWith(".html") -> getIcon("fugue-icons-3.5.6/icons/script-code.png")
+            arquivoNode.arquivo.endsWith(".js") -> getIcon("fugue-icons-3.5.6/icons/script-text.png")
+            arquivoNode.arquivo.endsWith(".db") -> getIcon("fugue-icons-3.5.6/icons/database.png")
+            arquivoNode.arquivo.endsWith(".sql") -> getIcon("fugue-icons-3.5.6/icons/database-sql.png")
+            arquivoNode.arquivo.endsWith(".pdf") -> getIcon("fugue-icons-3.5.6/icons/document-pdf-text.png")
+            else -> getIcon("fugue-icons-3.5.6/icons/report-paper.png")
+        }
+        return this
+    }
+}
