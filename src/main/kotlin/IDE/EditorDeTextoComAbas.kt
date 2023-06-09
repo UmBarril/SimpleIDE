@@ -3,6 +3,8 @@ package IDE
 import java.awt.*
 import java.io.File
 import javax.swing.*
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 import javax.swing.text.DefaultEditorKit
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
@@ -98,10 +100,10 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
      * @param caminhoDoArquivo Caminho do arquivo aberto se houver.
      * @param apenasLeitura Caso true, o conteúdo não poderá ser editado. Padrão = false
      */
-    class EditorDeTexto(var conteudo: String = "", val caminhoDoArquivo: String? = null, apenasLeitura: Boolean = false): JPanel() {
-        val areaDeEscrita: JTextPane
-        val contadorLinhas: JTextPane
-        val scrollPane: JScrollPane
+    class EditorDeTexto(var conteudo: String = "", val caminhoDoArquivo: String? = null, var apenasLeitura: Boolean = false): JPanel() {
+        private val areaDeEscrita: JTextPane
+        private val contadorLinhas: JTextPane
+        private val scrollPane: JScrollPane
 
         init {
             this@EditorDeTexto.size = Dimension(600, 600)
@@ -143,6 +145,20 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
                 this.isVisible = true
                 this.isOpaque = true
             }
+
+                areaDeEscrita.styledDocument.addDocumentListener(object : DocumentListener {
+                    override fun insertUpdate(e: DocumentEvent?) {
+                        contarLinhas()
+                    }
+
+                    override fun removeUpdate(e: DocumentEvent?) {
+                        contarLinhas()
+                    }
+
+                    override fun changedUpdate(e: DocumentEvent?) {
+                        contarLinhas()
+                    }
+                } )
 
             this@EditorDeTexto.add(scrollPane)
         }
