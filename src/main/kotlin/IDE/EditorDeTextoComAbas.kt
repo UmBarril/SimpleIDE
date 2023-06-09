@@ -195,8 +195,6 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             for (linha in 0 until conteudo.split("\n").size) {
                 doc.insertString(doc.length, "${linha+1}\n", docStyle)
             }
-
         }
-
     }
 }
