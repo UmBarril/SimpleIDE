@@ -106,7 +106,6 @@ class RenderizadorDeNodes : DefaultTreeCellRenderer() {
             arquivoNode.arquivo.endsWith(".c") -> getIcon("fugue-icons-3.5.6/icons/script-attribute-c.png")
             arquivoNode.arquivo.endsWith(".exe") -> getIcon("fugue-icons-3.5.6/icons/document-binary.png")
             arquivoNode.arquivo.endsWith(".cs") -> getIcon("fugue-icons-3.5.6/icons/script-visual-studio.png")
-            arquivoNode.arquivo.endsWith(".cs") -> getIcon("fugue-icons-3.5.6/icons/script-visual-studio.png")
             arquivoNode.arquivo.endsWith(".json") -> getIcon("fugue-icons-3.5.6/icons/json.png")
             arquivoNode.arquivo.endsWith(".html") -> getIcon("fugue-icons-3.5.6/icons/script-code.png")
             arquivoNode.arquivo.endsWith(".js") -> getIcon("fugue-icons-3.5.6/icons/script-text.png")
