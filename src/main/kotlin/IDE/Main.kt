@@ -1,7 +1,8 @@
 package IDE
 
+import IDE.util.ResourcesManager
+import java.awt.Color
 import java.awt.Dimension
-import java.awt.Font
 import java.awt.Toolkit
 import javax.swing.*
 
@@ -18,15 +19,16 @@ fun main() {
         e.printStackTrace()
     }
 
-    val telaDeCarregamento = JWindow().apply { // IDEA: Colocar imagem de carregamento aqui
-        add(JLabel("Carregando...").apply { font = Font("Arial", Font.BOLD, 50); })
-//        background = Color(0,0,0,0)
+    val telaDeCarregamento = JWindow().apply window@{ // IDEA: Colocar imagem de carregamento aqui
+        add(JLabel(ResourcesManager.getIcon("bskLogo.png")))
+        background = Color(0,0,0,0)
 
         pack()
         isVisible = true
         setLocationRelativeTo(null)
     }
     SwingUtilities.invokeLater { // invokeLater para não haver problemas com Threads mais tarde...
+        Thread.sleep(3000)
         try{
             val janelaPrincipal = JanelaPrincipal(Dimension(larguraJanela, alturaJanela))
             janelaPrincipal.isVisible = true
