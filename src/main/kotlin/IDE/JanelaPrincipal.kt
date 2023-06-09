@@ -34,7 +34,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         explorador = ExploradorDeArquivos(pastaAberta, tamanhoExplorador)
         editor = EditorDeTextoComAbas(tamanhoEditor)
 
-        explorador.adicionarArquivoSlecionadoListener {
+        explorador.adicionarArquivoSelecionadoListener {
             editor.abrirArquivo(it)
         }
 
@@ -190,12 +190,6 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         if (resultado == JFileChooser.APPROVE_OPTION) {
             val f = File(fileChooser.selectedFile.absolutePath)
             editor.abrirArquivo(f)
-            if(ConfigManager["arquivosRecentes"].isEmpty()) {
-                ConfigManager["arquivosRecentes"] = f.path
-            } else {
-                val cincoMaisRecentes: List<String> = ConfigManager["arquivosRecentes"].split(';', limit=5)
-                ConfigManager["arquivosRecentes"] = f.path + ";" + cincoMaisRecentes.joinToString()
-            }
         }
     }
 
