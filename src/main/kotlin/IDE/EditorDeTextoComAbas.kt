@@ -8,6 +8,7 @@ import javax.swing.event.DocumentListener
 import javax.swing.text.DefaultEditorKit
 import javax.swing.text.SimpleAttributeSet
 import javax.swing.text.StyleConstants
+import IDE.EditorDeTextoComAbas.EditorDeTexto as EditorDeTexto
 
 /**
  * Classe que segura os editores de texto
@@ -20,6 +21,15 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
         get() = (tabbedPane.selectedComponent as? EditorDeTexto)?.caminhoDoArquivo
 
     fun abrirArquivo(arquivo: File) {
+        // adicionando arquivo aos arquivos recente
+        if(ConfigManager["arquivosRecentes"].isEmpty()) {
+            ConfigManager["arquivosRecentes"] = arquivo.path
+        } else {
+            val cincoMaisRecentes: List<String> = ConfigManager["arquivosRecentes"].split(';', limit=5)
+            ConfigManager["arquivosRecentes"] = arquivo.path + ";" + cincoMaisRecentes.joinToString()
+        }
+
+        // verificando se o arquivo não já está aberto em outro lugar
         for(i in 0 until tabbedPane.tabCount) {
             val component = tabbedPane.getComponentAt(i)
             if(component is EditorDeTexto) {
@@ -29,10 +39,12 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
                 }
             }
         }
-        if(ConfigManager["arquivosPossiveisDeAbrir"].split(';').contains(arquivo.extension)) {
+
+        // Conferindo se esta tetnando abrir um arquivo não suportado
+        if(!ConfigManager["arquivosPossiveisDeAbrir"].split(';').contains(arquivo.extension)) {
             val opcoes = arrayOf("Apenas essa vez.", "Sempre abrir este tipo de arquivo.", "Cancelar.")
             val resultado = JOptionPane.showOptionDialog(this,
-                "A extensão de arquivo '${arquivo.extension}' não está na nossa lista de arquivos suportados. \n Deseja tentar abrir mesmo assim? (pode travar o programa)",
+                "A extensão do arquivo '${arquivo.name}' não está na nossa lista de arquivos suportados. \n Deseja tentar abrir mesmo assim? (pode travar o programa)",
                 "Extensão de arquivo desconhecida.",
                 JOptionPane.YES_NO_CANCEL_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
@@ -63,7 +75,7 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
         val botao = JButton("Criar um novo arquivo.")
         botao.addActionListener { // TODO corrigir que isso não está indo para o histórico de arquivos abertos
             criarArquivoVazio(JOptionPane.showInputDialog("Digite o nome do novo arquivo: "))
-            tabbedPane.remove(painelInicial)
+            tabbedPane.removeTabAt(tabbedPane.indexOfTabComponent(painelInicial))
         }
         painelInicial.add(botao)
 
@@ -80,7 +92,14 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
     }
 
     fun salvarArquivo(arquivo: File) {
-        arquivo.writeText((tabbedPane.selectedComponent as EditorDeTexto).conteudo)
+        val tab = tabbedPane.getTabComponentAt(tabbedPane.selectedIndex)
+        if(tab is EditorDeTexto){
+            if(tab.caminhoDoArquivo?.isNotEmpty() == true){
+                arquivo.writeText((tabbedPane.selectedComponent as EditorDeTexto).conteudo)
+            } else {
+                JOptionPane.showMessageDialog(null, "Abra um arquivo primeiro!")
+            }
+        }
     }
 
     private fun abrirAquivoSemVerificacao(arquivo: File) {
