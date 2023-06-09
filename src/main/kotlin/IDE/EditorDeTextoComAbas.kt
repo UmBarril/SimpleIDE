@@ -145,8 +145,8 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             }
 
             contadorLinhas = JTextPane().apply linhas@{
-                this@linhas.preferredSize = Dimension(this@EditorDeTexto.width/6, this@EditorDeTexto.height) // tamanho preferível do contador de linhas.
-                this@linhas.background = Color(95,65,75) // cor de fundo do contador de linhas.
+                this@linhas.preferredSize = Dimension(this@EditorDeTexto.width/12, this@EditorDeTexto.height) // tamanho preferível do contador de linhas.
+                this@linhas.background = Color(35,35,45) // cor de fundo do contador de linhas.
                 this@linhas.foreground = Color.WHITE // cor dos números das linhas.
                 this.isEditable = false // nega a permissão de escrever no contador de linhas.
 
@@ -156,14 +156,6 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
                 this.setParagraphAttributes(alinharDireita, true) // atributo de parágrafo do contador de linhas
             }
             contarLinhas()
-
-            val componente = areaDeEscrita.apply { add(contadorLinhas) }
-            scrollPane = JScrollPane(componente).apply scroll@{
-                this@scroll.preferredSize = this@EditorDeTexto.size
-                this.background = Color.magenta
-                this.isVisible = true
-                this.isOpaque = true
-            }
 
                 areaDeEscrita.styledDocument.addDocumentListener(object : DocumentListener {
                     override fun insertUpdate(e: DocumentEvent?) {
@@ -178,6 +170,11 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
                         contarLinhas()
                     }
                 } )
+
+            scrollPane = JScrollPane(areaDeEscrita).apply scroll@{
+                this@scroll.preferredSize = this@EditorDeTexto.size
+            }
+            scrollPane.setRowHeaderView(contadorLinhas)
 
             this@EditorDeTexto.add(scrollPane)
         }
