@@ -4,8 +4,6 @@ import java.awt.*
 import java.io.File
 import javax.swing.*
 import javax.swing.border.EmptyBorder
-import javax.swing.event.DocumentEvent
-import javax.swing.event.DocumentListener
 import javax.swing.text.*
 
 /**
@@ -21,9 +19,12 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
     init {
         preferredSize = dimensao
         layout = GridLayout(1,1)
+        foreground = Color.WHITE
 
-        abrirAbaESelecionar("Incio", criarTelaInicial())
-        add(tabbedPane)
+        abrirAbaESelecionar("Início", criarTelaInicial())
+        add(tabbedPane.apply {
+            foreground = Color(100,50,140)
+        })
     }
 
     fun abrirArquivo(arquivo: File) {
@@ -73,11 +74,22 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
     fun abrirArquivo(caminho: String): Unit = abrirArquivo(File(caminho))
 
     private fun criarTelaInicial(): JPanel {
-        val painelInicial = JPanel()
-        painelInicial.add(JLabel("Nenhum arquivo aberto!\n Vá em Arquivo > Abrir para começar, ou clique no botão a seguir!"))
-        val botao = JButton("Criar um novo arquivo.")
+        val painelInicial = JPanel().apply painelInicial@{
+            this@painelInicial.background = Color(45,45,55)
+            this@painelInicial.foreground = Color.WHITE
+        }
+        painelInicial.add(JLabel("Nenhum arquivo aberto!\n Vá em Arquivo > Abrir para começar, ou clique no botão a seguir!").apply {
+            foreground = Color.WHITE
+        })
+        val botao = JButton("Criar um novo arquivo.").apply botao@{
+            this@botao.background = Color(100,50,140)
+            this@botao.foreground = Color.WHITE
+        }
         botao.addActionListener { // TODO corrigir que isso não está indo para o histórico de arquivos abertos
-            criarArquivoVazio(JOptionPane.showInputDialog("Digite o nome do novo arquivo: "))
+            criarArquivoVazio(JOptionPane.showInputDialog("Digite o nome do novo arquivo: ").apply {
+                background = Color(45,45,55)
+                foreground = Color.WHITE
+            })
             tabbedPane.removeTabAt(0)
         }
         painelInicial.add(botao)
@@ -108,36 +120,70 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
         }
     }
 
-    private fun abrirAbaESelecionar(nomeDaAba: String, c: JComponent) {
-        tabbedPane.add(nomeDaAba, c)
+    // editor deve ser JPanel. Por alguma razão algumas coisas não funcionando se não for.
+    // Por isso esse overload
+    private fun abrirAbaESelecionar(nomeDaAba: String, editor: EditorDeTexto) {
+        val panel = JPanel(GridLayout(1,1))
+        panel.add(editor)
+        abrirAbaESelecionar(nomeDaAba, panel)
+    }
+
+    private fun abrirAbaESelecionar(nomeDaAba: String, c: JPanel) {
+//        val frame = JFrame()
+//        frame.add(c)
+//        frame.isVisible = true
+        tabbedPane.add(nomeDaAba, c.apply {
+            background = Color(45,45,55)
+            foreground = Color.WHITE
+        })
         tabbedPane.selectedIndex = tabbedPane.tabCount - 1
+    }
+
+    internal class ScrollablePanel : JPanel(), Scrollable {
+        override fun getPreferredScrollableViewportSize(): Dimension {
+            //the panel prefers to take as much height as possible
+            return Dimension(preferredSize.width, Int.MAX_VALUE)
+        }
+
+        override fun getScrollableUnitIncrement(visibleRect: Rectangle, orientation: Int, direction: Int): Int {
+            return 1
+        }
+
+        override fun getScrollableBlockIncrement(visibleRect: Rectangle, orientation: Int, direction: Int): Int {
+            return 1
+        }
+
+        override fun getScrollableTracksViewportWidth(): Boolean {
+            return true
+        }
+
+        override fun getScrollableTracksViewportHeight(): Boolean {
+            return true
+        }
     }
 
     /**
      * Classe para editar/visualizar o conteúdo de um arquivo.
-     * @param conteudoIncial
+     * @param conteudo
      * @param caminhoDoArquivo Caminho do arquivo aberto se houver.
      * @param apenasLeitura Caso true, o conteúdo não poderá ser editado. Padrão = false
-     *
-     * TODO: Tornar essa classe mais rápida
      */
     class EditorDeTexto(
-        conteudoIncial: String = "",
+        var conteudo: String = "",
         val caminhoDoArquivo: String? = null,
-        private var apenasLeitura: Boolean = false,
+        private var apenasLeitura: Boolean = false ,
+        tamanho: Dimension = Dimension(600, 600)
     ) : JScrollPane() {
-        private val areaDeEscrita: JTextPane
+        private val areaDeEscrita: JTextArea
         private val contadorDeLinhas: JTextPane
-        val conteudo: String
-            get() = areaDeEscrita.document.getText(0, areaDeEscrita.document.length)
 
         init {
+            preferredSize = tamanho
             background = Color(45, 45, 55)
 
-            areaDeEscrita = criarAreaDeEscrita(conteudoIncial)
+            areaDeEscrita = criarAreaDeEscrita()
             contadorDeLinhas = criarContadorDeLinhas()
 
-            // https://stackoverflow.com/questions/69536141/jscrollpane-dynamic-rowheader-out-of-sync-when-resizing
             val panel = ScrollablePanel()
             panel.layout = GridBagLayout()
 
@@ -154,24 +200,20 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             //text takes as much of the width as it can get
             constraints.weightx = 1.0
 
+            //numbers component seems to have some insets so add 2px at the top to get better alignment - could be done differently as well
+            constraints.insets = Insets(2, 0, 0, 0)
             panel.add(areaDeEscrita, constraints)
 
             verticalScrollBarPolicy = VERTICAL_SCROLLBAR_ALWAYS
-            horizontalScrollBarPolicy = HORIZONTAL_SCROLLBAR_AS_NEEDED
-
             setViewportView(panel)
 
             atualizarContadorDeLinhas()
-            areaDeEscrita.styledDocument.addDocumentListener(object : DocumentListener {
-                override fun insertUpdate(e: DocumentEvent?) = atualizarContadorDeLinhas()
-                override fun removeUpdate(e: DocumentEvent?) = atualizarContadorDeLinhas()
-                override fun changedUpdate(e: DocumentEvent?) = atualizarContadorDeLinhas()
-            })
         }
 
-        private fun criarAreaDeEscrita(conteudoInicial: String): JTextPane {
-            val areaDeEscrita = JTextPane()
+        private fun criarAreaDeEscrita(): JTextArea {
+            val areaDeEscrita = JTextArea()
 
+//            areaDeEscrita.preferredSize = tamanhoPreferivel
             areaDeEscrita.background = Color(45, 45, 55) // cor de fundo do painel de texto.
             areaDeEscrita.foreground = Color.WHITE // cor das letras.
             areaDeEscrita.font = Font("Monospaced", Font.PLAIN, 20) // fonte do painel de texto.
@@ -181,7 +223,6 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             areaDeEscrita.isEditable = !apenasLeitura // definir se você pode ou não escrever no arquivo.
 
             val doc: Document = areaDeEscrita.document
-
             // Substituindo tabs por dois espaços
             (doc as AbstractDocument).documentFilter = object : DocumentFilter() {
                 @Throws(BadLocationException::class)
@@ -192,7 +233,7 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
 
             val style = SimpleAttributeSet()
             StyleConstants.setForeground(style, Color.WHITE)
-            doc.insertString(doc.length, conteudoInicial, style)
+            doc.insertString(doc.length, conteudo, style)
             StyleConstants.setFontSize(style, 20)
 
             return areaDeEscrita
@@ -219,17 +260,6 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             StyleConstants.setForeground(docStyle, Color.WHITE)
             StyleConstants.setFontFamily(docStyle, "Monospaced")
             StyleConstants.setFontSize(docStyle, 20)
-
-            // Removendo todo o texto do documento
-            val doc = contadorDeLinhas.document
-            doc.remove(0, doc.length)
-
-            val contagemDeLinhas: Int = this.areaDeEscrita.document.defaultRootElement.elementCount
-
-            // Adicionando numeros de linha
-            for (i in 1 .. contagemDeLinhas)  {
-                doc.insertString(doc.length, "$i\n", docStyle)
-            }
         }
 
     }
