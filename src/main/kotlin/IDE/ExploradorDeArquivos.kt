@@ -1,6 +1,7 @@
 package IDE
 
 import IDE.util.ResourcesManager.getIcon
+import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
 import java.io.File
@@ -30,6 +31,7 @@ class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel()
     constructor(pastaParaAbrir: String, dimensao: Dimension) : this(File(pastaParaAbrir), dimensao)
 
     init {
+        background = Color(100,50, 140)
         preferredSize = dimensao
         minimumSize = dimensao
 
@@ -42,8 +44,13 @@ class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel()
 
         raiz.carregarTodosOsSubArquivos()
 
-        arvore = JTree(raiz)
-        scrollPane = JScrollPane(this.arvore)
+        arvore = JTree(raiz).apply {
+            background = Color(65, 65, 75)
+        }
+        scrollPane = JScrollPane(this.arvore).apply {
+//            background = Color(65, 65, 75)
+//            setUI(basicScrollBarUI()) isso ta crashando a janela por algum motivo. Implementar no futuro
+        }
         scrollPane.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
 
         this.add(scrollPane)
@@ -70,7 +77,7 @@ class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel()
     }
 
     fun atualizarDimensao(largura: Int) {
-        scrollPane.preferredSize = Dimension(largura - 25, this.height)
+        scrollPane.preferredSize = Dimension(largura, this.height)
         arvore.preferredSize = scrollPane.size
     }
 }
@@ -108,4 +115,8 @@ class RenderizadorDeNodes : DefaultTreeCellRenderer() {
         }
         return this
     }
+
+    override fun getBackgroundSelectionColor(): Color = Color(100,50,140)
+    override fun getBackgroundNonSelectionColor(): Color = Color(65,65,75)
+    override fun getForeground(): Color = Color.WHITE
 }
