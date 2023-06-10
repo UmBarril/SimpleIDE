@@ -8,7 +8,6 @@ import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import javax.swing.text.*
 
-
 /**
  * Classe que segura os editores de texto
  * @param dimensao tamanho do componente
@@ -57,7 +56,7 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
                 JOptionPane.QUESTION_MESSAGE,
                 null,
                 opcoes,
-                opcoes[0])
+                opcoes[2])
 
             when(resultado) {
                 JOptionPane.YES_OPTION -> {}
@@ -158,7 +157,7 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             panel.add(areaDeEscrita, constraints)
 
             verticalScrollBarPolicy = VERTICAL_SCROLLBAR_ALWAYS
-            horizontalScrollBarPolicy = HORIZONTAL_SCROLLBAR_NEVER
+            horizontalScrollBarPolicy = HORIZONTAL_SCROLLBAR_AS_NEEDED
 
             setViewportView(panel)
 
@@ -233,14 +232,5 @@ class EditorDeTextoComAbas(dimensao: Dimension) : JPanel(GridLayout()) {
             }
         }
 
-        internal class ScrollablePanel : JPanel(), Scrollable {
-
-            //the panel prefers to take as much height as possible
-            override fun getPreferredScrollableViewportSize() = Dimension(preferredSize.width, Int.MAX_VALUE)
-            override fun getScrollableUnitIncrement(visibleRect: Rectangle, orientation: Int, direction: Int) = 1
-            override fun getScrollableBlockIncrement(visibleRect: Rectangle, orientation: Int, direction: Int) = 1
-            override fun getScrollableTracksViewportWidth() = true
-            override fun getScrollableTracksViewportHeight() = (parent as JViewport).height > preferredSize.height
-        }
     }
 }
