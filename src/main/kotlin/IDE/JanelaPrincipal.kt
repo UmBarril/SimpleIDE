@@ -2,7 +2,9 @@ package IDE
 
 import IDE.util.ResourcesManager.getIcon
 import IDE.util.ResourcesManager.getResource
-import java.awt.*
+import java.awt.Color
+import java.awt.Dimension
+import java.awt.GridLayout
 import java.awt.event.*
 import java.io.File
 import javax.swing.*
@@ -16,6 +18,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
     private var editor: EditorDeTextoComAbas
 
     init {
+        this.contentPane.background = Color(45,45,55)
         ConfigManager.carregar()
 
         layout = GridLayout()
@@ -24,7 +27,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         addWindowListener(object : WindowAdapter() {
             override fun windowClosing(e: WindowEvent?) = fecharProgramaSeConfirmar()
         })
-        contentPane.background = Color(75, 75, 85)
+        contentPane.background = Color(45, 45, 55)
         iconImage = ImageIcon("").image // TODO
         jMenuBar = criarMenuBar()
 
@@ -40,6 +43,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
 
         add(
             JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.explorador, this.editor).apply {
+                this.background = Color(45,45,55)
                 addPropertyChangeListener {
                     if (it.propertyName == "dividerLocation" || it.propertyName == "lastDividerLocation") {
                         println("valor: ${it.oldValue}")
@@ -50,6 +54,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         )
         configurarMenuDeContexto()
         pack()
+        this.isVisible = true
     }
     // Código para adicionar a funcionalidade de menu de contexto no explorador.
     // TODO
@@ -72,9 +77,12 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
     }
 
     private fun criarMenuBar(): JMenuBar {
-        val menuBar = JMenuBar()
+        val menuBar = JMenuBar().apply {
+            this.background = Color(45,45,55)
+        }
         menuBar.adicionarVarios(
             JMenu("Arquivo").apply {
+                this.background = Color(65,65,75)
                 mnemonic = KeyEvent.VK_A
                 adicionarVarios(
                     JMenuItem("Abrir Pasta...").apply {
@@ -93,7 +101,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                                 it.removeAll()
                                 val arquivosRecentes = ConfigManager["arquivosRecentes"].split(";")
                                 if(arquivosRecentes.isEmpty()) {
-                                    it.add(JMenuItem("Nunhum arquivo aberto ainda."))
+                                    it.add(JMenuItem("Nenhum arquivo aberto ainda."))
                                     return
                                 }
                                 for(i in arquivosRecentes.indices) {
@@ -125,23 +133,6 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                         icon = getIcon("fugue-icons-3.5.6/icons/door-open-out.png")
                         toolTipText = "Sair da IDE"
                         addActionListener { fecharProgramaSeConfirmar() }
-                    }
-                )
-            },
-            JMenu("Janela").apply {
-                mnemonic = KeyEvent.VK_J
-                adicionarVarios(
-                    JMenu("Mudar Tema").apply {
-                        adicionarVarios(
-                            JRadioButtonMenuItem("Tema Escuro").apply {
-                                icon = getIcon("fugue-icons-3.5.6/icons/flag-black.png")
-                                addActionListener { mudarTema(TemaIDE.ESCURO) }
-                            },
-                            JRadioButtonMenuItem("Tema Claro").apply {
-                                icon = getIcon("fugue-icons-3.5.6/icons/flag-white.png")
-                                addActionListener { mudarTema(TemaIDE.CLARO)}
-                            }
-                        )
                     }
                 )
             },
@@ -212,19 +203,6 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
         }
     }
 
-    private fun mudarTema(tema: TemaIDE) {
-        when(tema) {
-            TemaIDE.CLARO -> {
-                this.contentPane.background = Color(175, 175, 190)
-                this.contentPane.background = Color(75, 75, 85)
-            }
-            TemaIDE.ESCURO -> {
-                this.contentPane.background = Color(75, 75, 85)
-                this.contentPane.background = Color(75, 75, 85)
-            }
-        }
-    }
-
     private fun clicouBotaoAbrirConfiguracoes(e: ActionEvent) {
         val janelaConfiguracoes = JDialog(this, "Configurações")
         janelaConfiguracoes.setIconImage(ImageIcon(getResource("fugue-icons-3.5.6/icons/gear.png")).image)
@@ -275,8 +253,4 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
             this.add(comp)
         }
     }
-}
-
-enum class TemaIDE {
-    CLARO, ESCURO
 }
