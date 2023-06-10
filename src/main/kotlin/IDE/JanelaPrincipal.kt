@@ -27,7 +27,7 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
             override fun windowClosing(e: WindowEvent?) = fecharProgramaSeConfirmar()
         })
         contentPane.background = Color(45, 45, 55)
-        iconImage = ImageIcon("").image // TODO
+        iconImage = getIcon("bskMiniatura.png").image
         jMenuBar = criarMenuBar()
 
         val tamanhoExplorador = Dimension((tamanho.width * 0.2).roundToInt(), tamanho.height - jMenuBar.height)
@@ -44,7 +44,6 @@ class JanelaPrincipal(tamanho: Dimension) : JFrame("SimpleIDE") {
                 this.background = Color(45,45,55)
                 addPropertyChangeListener {
                     if (it.propertyName == "dividerLocation" || it.propertyName == "lastDividerLocation") {
-                        println("valor: ${it.oldValue}")
                         explorador.atualizarDimensao(it.oldValue as Int)
                     }
                 }
