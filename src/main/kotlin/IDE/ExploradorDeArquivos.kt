@@ -1,11 +1,12 @@
 package IDE
 
 import IDE.util.ResourcesManager.getIcon
-import java.awt.Color
-import java.awt.Component
-import java.awt.Dimension
+import java.awt.*
 import java.io.File
-import javax.swing.*
+import javax.swing.JPanel
+import javax.swing.JScrollPane
+import javax.swing.JTree
+import javax.swing.ScrollPaneConstants
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
@@ -13,52 +14,56 @@ import javax.swing.tree.DefaultTreeModel
 class CaminhoNaoValidoException(caminho: String) : Exception("Caminho inserido (\"$caminho\"não é válido")
 
 class ArquivoNode(val arquivo: File) : DefaultMutableTreeNode(arquivo.name, arquivo.isDirectory) {
-    fun carregarTodosOsSubArquivos() {
+    fun carregarTodosOsSubArquivos(modelo: DefaultTreeModel) {
         arquivo.listFiles()?.forEach {
-            add(ArquivoNode(it))
+            if(!it.isHidden)
+                modelo.insertNodeInto(ArquivoNode(it), this, this.childCount)
         }
     }
 }
 
 // FIXME
-//  - PROIBIR DE ABRIR ARQUIVOS DO SISTEMA
+//  - PROIBIR DE ABRIR ARQUIVOS DO SISTEMA (OK)
 //  - ESCONDER DOTFILES
-class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel() {
+class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel(GridLayout()) {
     private val arvore: JTree
     private val scrollPane: JScrollPane
     private val listeners = mutableListOf<(File) -> Unit>()
-
+    private val modelo = DefaultTreeModel(ArquivoNode(pastaParaAbrir))
     constructor(pastaParaAbrir: String, dimensao: Dimension) : this(File(pastaParaAbrir), dimensao)
 
     init {
         background = Color(100,50, 140)
         preferredSize = dimensao
-        minimumSize = dimensao
 
         if (!pastaParaAbrir.isDirectory) {
             throw CaminhoNaoValidoException(pastaParaAbrir.absolutePath)
         }
-
-        val modelo = DefaultTreeModel(ArquivoNode(pastaParaAbrir))
         val raiz = modelo.root as ArquivoNode
 
-        raiz.carregarTodosOsSubArquivos()
+        raiz.carregarTodosOsSubArquivos(modelo)
 
-        arvore = JTree(raiz).apply {
-            background = Color(65, 65, 75)
+        arvore = object: JTree(raiz) {
+            override fun getPreferredScrollableViewportSize(): Dimension? {
+                return preferredSize
+            }
         }
-        scrollPane = JScrollPane(this.arvore).apply {
+        arvore.background = Color(65, 65, 75)
+
+        scrollPane = JScrollPane().apply {
 //            background = Color(65, 65, 75)
 //            setUI(basicScrollBarUI()) isso ta crashando a janela por algum motivo. Implementar no futuro
+            verticalScrollBar.preferredSize = Dimension(10, 0)
+            horizontalScrollBar.preferredSize = Dimension(0, 10)
+            verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
+            verticalScrollBar.unitIncrement = 12;
         }
-        scrollPane.verticalScrollBarPolicy = ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS
-
-        this.add(scrollPane)
         arvore.apply {
+            preferredSize = dimensao
             addTreeSelectionListener { // carregamento Lazy das pastas
                 val nodeSelecionado = arvore.lastSelectedPathComponent as ArquivoNode
                 if (nodeSelecionado.allowsChildren) {
-                    nodeSelecionado.carregarTodosOsSubArquivos()
+                    nodeSelecionado.carregarTodosOsSubArquivos(modelo)
                 } else {
                     listeners.forEach {
                         it.invoke(nodeSelecionado.arquivo)
@@ -69,6 +74,16 @@ class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel()
             cellRenderer = RenderizadorDeNodes()
         }
         modelo.reload()
+
+        val panel = ScrollablePanel()
+        val constraints = GridBagConstraints()
+        constraints.fill = GridBagConstraints.BOTH
+        constraints.weightx = 1.0
+        constraints.weighty = 1.0
+        panel.add(arvore, constraints)
+        scrollPane.setViewportView(panel)
+
+        this.add(scrollPane)
     }
 
     // Adicionar um listener que será acionado quando algum elemento dos arquivos for sleecionado
@@ -77,8 +92,8 @@ class ExploradorDeArquivos(pastaParaAbrir: File, dimensao: Dimension) : JPanel()
     }
 
     fun atualizarDimensao(largura: Int) {
-        scrollPane.preferredSize = Dimension(largura, this.height)
-        arvore.preferredSize = scrollPane.size
+//        scrollPane.preferredSize = Dimension(largura, this.height)
+//        arvore.preferredSize = scrollPane.size
     }
 }
 
