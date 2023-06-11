@@ -1,0 +1,9 @@
+## Melhorias
+  - adicionar mais funções para a UX
+  - Adicionar função de menu de contexto
+  - Mais opções nas configurações
+  - Refatoração geral
+    - Diminuir o acoplamento entre a classe estática (object) ConfigManager e as outras classes
+    - Aumentar coesão de diminuir acoplamento no caso do EditorDeTextoComAbas
+    - Corrigir o problema que as classes são muitos longas
+  - Aumentar abrangência dos testes (talvez com outra biblioteca que permita mais testes com GUI)

@@ -1,4 +1,4 @@
-package IDE
+package barril.ide.view
 
 import java.awt.Dimension
 import java.awt.Rectangle

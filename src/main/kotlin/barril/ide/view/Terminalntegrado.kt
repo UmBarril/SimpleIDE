@@ -1,4 +1,4 @@
-package IDE
+package barril.ide.view
 
 import javax.swing.JPanel
 

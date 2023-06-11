@@ -1,4 +1,4 @@
-package IDE.util
+package barril.ide
 
 import javax.swing.ImageIcon
 
@@ -6,7 +6,7 @@ import javax.swing.ImageIcon
  * Wrapper para facilitar o acesso à pasta de resources
  * @author Slz
  */
-object ResourcesManager {
+object ResourcesUtil {
 
     /**
      * Pega um recurso da pasta de recursos a partir do caminho dado.

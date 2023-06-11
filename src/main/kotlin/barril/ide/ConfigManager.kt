@@ -1,4 +1,4 @@
-package IDE
+package barril.ide
 
 import java.io.File
 import java.io.FileReader
@@ -9,7 +9,11 @@ object ConfigManager {
     private val props = Properties()
     private val arquivoConfig = File("config.properties")
 
-    fun carregar() {
+    var inicializado = false
+        private set
+
+    fun inicializar() {
+        inicializado = true
         if(arquivoConfig.exists()) {
             props.load(FileReader(arquivoConfig))
         }
@@ -20,7 +24,7 @@ object ConfigManager {
             props.setProperty("editorTamanhoFonte", "20")
             props.setProperty("arquivosRecentes", "")
             val arquivosSuportadosNativamente = arrayOf(
-                ".java", ".c", ".txt", ".py", ".kt", ".kts", ".md", ".html", ".css", ".js", ".php", ".json", ".cpp", ".pl", ".cs", ".bat", ".ps1"
+                "java", "c", "txt", "py", "kt", "kts", "md", "html", "css", "js", "php", "json", "cpp", "pl", "cs", "bat", "ps1"
             )
             props.setProperty("arquivosPossiveisDeAbrir", arquivosSuportadosNativamente.joinToString(";"))
         }
@@ -30,6 +34,6 @@ object ConfigManager {
         props.store(FileWriter(arquivoConfig), "Configurações gerais da SimpleIDE")
     }
 
-    operator fun get(chave: String): String = props.getProperty(chave)
-    operator fun set(chave: String, valor: String): Any = props.setProperty(chave, valor)
+    operator fun get(chave: String): String = props.getProperty(chave) ?: ""
+    operator fun set(chave: String, valor: String): Any? = props.setProperty(chave, valor)
 }
