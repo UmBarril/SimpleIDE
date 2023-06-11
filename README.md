@@ -8,7 +8,7 @@ Um simples editor de texto feito com Kotlin e Java Swing.
   - Tema Escuro
    
 - Funções para adicionar:
-  - Highlight e Identação de arquivos de programação
+  - Highlight e Indentação de arquivos de programação
   - Mais opções de customização nas configurações
   - Terminal integrado
 
