@@ -2,8 +2,9 @@
   - adicionar mais funções para a UX
   - Adicionar função de menu de contexto
   - Mais opções nas configurações
-  - Refatoração geral
+  - Vejo que é necessário uma refatoração no código, já estava ficando meio complicado de se compreender e resolver problemas.
     - Diminuir o acoplamento entre a classe estática (object) ConfigManager e as outras classes
     - Aumentar coesão de diminuir acoplamento no caso do EditorDeTextoComAbas
     - Corrigir o problema que as classes são muitos longas
   - Aumentar abrangência dos testes (talvez com outra biblioteca que permita mais testes com GUI)
+  - Melhor separação de funções

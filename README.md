@@ -4,8 +4,10 @@ Um simples editor de texto feito com Kotlin e Java Swing.
 - Funções:
   - Explorador de arquivos integrado
   - Abas
-    - Segure a tecla Alt+CliqueEsquerdo em uma aba para fechá-la
+    - Segure a tecla Alt+CliqueEsquerdo em uma aba para fechá-las
   - Tema Escuro
+  - Salvamento e recuperação de arquivos
+  - Customização (tamanho da fonte e outros)
    
 - Funções para adicionar:
   - Highlight e Indentação de arquivos de programação
